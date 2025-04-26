@@ -1,5 +1,6 @@
 import express from 'express';
 import authRouter from './routes/auth.js';
+import timelineRouter from './routes/timeline.js';
 
 // 👇 NEW: Define user type
 interface User {
@@ -40,6 +41,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/timeline', timelineRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'Server is healthy!' });
