@@ -1,3 +1,5 @@
+import '../../types/express';
+
 import { JwtPayload } from '../../shared/types/userTypes';
 
 declare module 'express-serve-static-core' {
