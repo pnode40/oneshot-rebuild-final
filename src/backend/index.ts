@@ -1,13 +1,14 @@
 // src/backend/index.ts
+
 import express from 'express';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  res.send('Backend server is running! 🚀');
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'Server is healthy!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend server is running on http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
