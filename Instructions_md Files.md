@@ -1,255 +1,562 @@
-# My Info Section Rebuild Plan
+S C:\OneShotLocal> # Phase 2.1  Authentication Rebuild: Registration and Login Pages
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal>  Create two new frontend pages:
+Create : The term 'Create' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:2
++  Create two new frontend pages:
++  ~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Create:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-## Overview
+PS C:\OneShotLocal> - /src/frontend/pages/Register.tsx
+At line:1 char:2
++ - /src/frontend/pages/Register.tsx
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:4
++ - /src/frontend/pages/Register.tsx
++    ~
+You must provide a value expression following the '/' operator.
+At line:1 char:4
++ - /src/frontend/pages/Register.tsx
++    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unexpected token 'src/frontend/pages/Register.tsx' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-This document outlines the plan to rebuild the "My Info" section on the internal profile page using the `ProfileInlineEditField` component to replace the current legacy inputs. This upgrade will provide a consistent user experience, proper saving feedback, and ensure data synchronization with the public profile.
+PS C:\OneShotLocal> - /src/frontend/pages/Login.tsx
+At line:1 char:2
++ - /src/frontend/pages/Login.tsx
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:4
++ - /src/frontend/pages/Login.tsx
++    ~
+You must provide a value expression following the '/' operator.
+At line:1 char:4
++ - /src/frontend/pages/Login.tsx
++    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unexpected token 'src/frontend/pages/Login.tsx' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-## Current Issues Analysis
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ✅ Create a basic reusable AuthInput component:
+✅ : The term '✅' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ ✅ Create a basic reusable AuthInput component:
++ ~
+    + CategoryInfo          : ObjectNotFound: (✅:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-After reviewing the codebase, I've identified several issues with the current implementation:
+PS C:\OneShotLocal> - /src/frontend/components/forms/AuthInput.tsx
+At line:1 char:2
++ - /src/frontend/components/forms/AuthInput.tsx
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:4
++ - /src/frontend/components/forms/AuthInput.tsx
++    ~
+You must provide a value expression following the '/' operator.
+At line:1 char:4
++ - /src/frontend/components/forms/AuthInput.tsx
++    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unexpected token 'src/frontend/components/forms/AuthInput.tsx' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-1. **Inconsistent UX**: The "My Info" section is using standard form inputs inside an accordion, which breaks the pattern of inline editing used elsewhere.
-2. **Missing Save Feedback**: The current implementation lacks proper loading states and success confirmations.
-3. **Field Mapping Inconsistencies**: Some fields have different naming conventions between frontend and API (e.g., `phoneNumber` vs. `phone`).
-4. **Endpoint Confusion**: Some fields should update via `/api/profile` while others need `/api/account/update`.
-5. **No Visual Feedback**: Users don't get visual confirmation when their changes are saved.
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ✅ Set up simple forms:
+✅ : The term '✅' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ ✅ Set up simple forms:
++ ~
+    + CategoryInfo          : ObjectNotFound: (✅:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-## Fields to Rebuild
+PS C:\OneShotLocal> - Registration Form: Full Name, Email, Password, Confirm Password
+At line:1 char:2
++ - Registration Form: Full Name, Email, Password, Confirm Password
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - Registration Form: Full Name, Email, Password, Confirm Password
++   ~~~~~~~~~~~~
+Unexpected token 'Registration' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-Here is a breakdown of the fields in the "My Info" section and their corresponding API endpoints:
+PS C:\OneShotLocal> - Login Form: Email, Password
+At line:1 char:2
++ - Login Form: Email, Password
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - Login Form: Email, Password
++   ~~~~~
+Unexpected token 'Login' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-### User Account Data (`/api/account/update` endpoint)
-- **Email**: Updates the user's email address
-- **Phone Number**: Updates the user's phone number
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ✅ Create basic validation Zod schemas:
+✅ : The term '✅' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ ✅ Create basic validation Zod schemas:
++ ~
+    + CategoryInfo          : ObjectNotFound: (✅:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-### Profile Data (`/api/profile` endpoint)
-- **Jersey Number**: Updates profile.jerseyNumber
-- **Position**: Updates profile.position
-- **School**: Updates profile.school
-- **Graduation Year**: Updates profile.graduationYear
-- **Twitter Handle**: Updates profile.twitterHandle
+PS C:\OneShotLocal> - /src/shared/schemas/authSchemas.ts
+At line:1 char:2
++ - /src/shared/schemas/authSchemas.ts
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:4
++ - /src/shared/schemas/authSchemas.ts
++    ~
+You must provide a value expression following the '/' operator.
+At line:1 char:4
++ - /src/shared/schemas/authSchemas.ts
++    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unexpected token 'src/shared/schemas/authSchemas.ts' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-## Implementation Plan
+PS C:\OneShotLocal>   - RegisterSchema
+At line:1 char:4
++   - RegisterSchema
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:5
++   - RegisterSchema
++     ~~~~~~~~~~~~~~
+Unexpected token 'RegisterSchema' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-### 1. Files to Edit
+PS C:\OneShotLocal>   - LoginSchema
+At line:1 char:4
++   - LoginSchema
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:5
++   - LoginSchema
++     ~~~~~~~~~~~
+Unexpected token 'LoginSchema' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-**Primary file for editing:**
-- `client/src/pages/profile-new.tsx`
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ✅ Setup shared user types:
+✅ : The term '✅' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ ✅ Setup shared user types:
++ ~
+    + CategoryInfo          : ObjectNotFound: (✅:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-**Supporting files to reference:**
-- `client/src/components/ProfileInlineEditField.tsx`
-- `client/src/pages/profile-page.tsx` (contains working examples of inline edit fields)
+PS C:\OneShotLocal> - /src/shared/types/userTypes.ts
+At line:1 char:2
++ - /src/shared/types/userTypes.ts
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:4
++ - /src/shared/types/userTypes.ts
++    ~
+You must provide a value expression following the '/' operator.
+At line:1 char:4
++ - /src/shared/types/userTypes.ts
++    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unexpected token 'src/shared/types/userTypes.ts' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-### 2. Code Changes
+PS C:\OneShotLocal>   - User type definition (id, email, name, verified boolean)
+At line:1 char:4
++   - User type definition (id, email, name, verified boolean)
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:5
++   - User type definition (id, email, name, verified boolean)
++     ~~~~
+Unexpected token 'User' in expression or statement.
+At line:1 char:29
++   - User type definition (id, email, name, verified boolean)
++                             ~
+Missing argument in parameter list.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-#### Step 1: Remove the Legacy Accordion Structure
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ✅ Create a basic auth route:
+✅ : The term '✅' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ ✅ Create a basic auth route:
++ ~
+    + CategoryInfo          : ObjectNotFound: (✅:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-Replace the current accordion implementation with a new clean layout that matches the "Profile" tab's design language:
+PS C:\OneShotLocal> - /src/backend/routes/auth.ts
+At line:1 char:2
++ - /src/backend/routes/auth.ts
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:4
++ - /src/backend/routes/auth.ts
++    ~
+You must provide a value expression following the '/' operator.
+At line:1 char:4
++ - /src/backend/routes/auth.ts
++    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unexpected token 'src/backend/routes/auth.ts' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-```jsx
-{/* My Info Section - Always visible, inline editable */}
-<div className="bg-white rounded-xl shadow overflow-hidden mb-4">
-  <div className="px-5 py-4 border-b border-gray-100">
-    <h3 className="font-medium text-lg text-gray-900">My Info</h3>
-  </div>
-  
-  <div className="px-5 divide-y divide-gray-50">
-    {/* Inline edit fields will go here */}
-  </div>
-</div>
-```
+PS C:\OneShotLocal>   - POST /api/auth/register → Creates a user
+␦ Creates a user;78d33677-91e1-4845-9c4e-dc7eba8da125At line:1 char:4
++   - POST /api/auth/register → Creates a user
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:5
++   - POST /api/auth/register → Creates a user
++     ~~~~
+Unexpected token 'POST' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-#### Step 2: Add Inline Edit Fields with Proper API Connections
+PS C:\OneShotLocal>   - POST /api/auth/login → Authenticates user
+␦ Authenticates user;78d33677-91e1-4845-9c4e-dc7eba8da125At line:1 char:4
++   - POST /api/auth/login → Authenticates user
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:5
++   - POST /api/auth/login → Authenticates user
++     ~~~~
+Unexpected token 'POST' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-For each field, implement a `ProfileInlineEditField` component with appropriate props:
+PS C:\OneShotLocal>   - GET /api/auth/verify → Verifies email (even if simulated)
+␦ Verifies email (even if simulated);78d33677-91e1-4845-9c4e-dc7eba8da125At line:1 char:4
++   - GET /api/auth/verify → Verifies email (even if simulated)
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:5
++   - GET /api/auth/verify → Verifies email (even if simulated)
++     ~~~
+Unexpected token 'GET' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-```jsx
-{/* Email */}
-<ProfileInlineEditField 
-  label="Email"
-  value={formState.email}
-  onSave={(value) => updateAccount.mutate({ email: value })}
-  inputType="email"
-  isLoading={updateAccount.isPending}
-  tooltip="Your email for recruiting communications"
-/>
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ✅ Build dummy email service:
+✅ : The term '✅' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ ✅ Build dummy email service:
++ ~
+    + CategoryInfo          : ObjectNotFound: (✅:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-{/* Phone */}
-<ProfileInlineEditField 
-  label="Phone"
-  value={formState.phoneNumber}
-  onSave={(value) => updateAccount.mutate({ phone: value })}
-  inputType="tel"
-  isLoading={updateAccount.isPending}
-/>
+PS C:\OneShotLocal> - /src/backend/services/emailService.ts
+At line:1 char:2
++ - /src/backend/services/emailService.ts
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:4
++ - /src/backend/services/emailService.ts
++    ~
+You must provide a value expression following the '/' operator.
+At line:1 char:4
++ - /src/backend/services/emailService.ts
++    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unexpected token 'src/backend/services/emailService.ts' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-{/* Twitter */}
-<ProfileInlineEditField 
-  label="Twitter"
-  value={formState.twitterHandle || ''}
-  onSave={(value) => updateProfile.mutate({ twitterHandle: value })}
-  isLoading={updateProfile.isPending}
-  tooltip="Your Twitter/X handle without the @ symbol"
-/>
+PS C:\OneShotLocal>   - Simulate email verification (console log for now)
+At line:1 char:4
++   - Simulate email verification (console log for now)
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:5
++   - Simulate email verification (console log for now)
++     ~~~~~~~~
+Unexpected token 'Simulate' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-{/* Jersey Number */}
-<ProfileInlineEditField 
-  label="Jersey Number"
-  value={formState.jerseyNumber || ''}
-  onSave={(value) => updateProfile.mutate({ jerseyNumber: value })}
-  isLoading={updateProfile.isPending}
-/>
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ✅ Protect backend routes:
+✅ : The term '✅' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ ✅ Protect backend routes:
++ ~
+    + CategoryInfo          : ObjectNotFound: (✅:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-{/* Position */}
-<ProfileInlineEditField 
-  label="Position"
-  value={formState.position || ''}
-  onSave={(value) => updateProfile.mutate({ position: value })}
-  isLoading={updateProfile.isPending}
-/>
+PS C:\OneShotLocal> - /src/backend/middleware/authMiddleware.ts
+At line:1 char:2
++ - /src/backend/middleware/authMiddleware.ts
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:4
++ - /src/backend/middleware/authMiddleware.ts
++    ~
+You must provide a value expression following the '/' operator.
+At line:1 char:4
++ - /src/backend/middleware/authMiddleware.ts
++    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unexpected token 'src/backend/middleware/authMiddleware.ts' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-{/* School */}
-<ProfileInlineEditField 
-  label="School"
-  value={formState.school || ''}
-  onSave={(value) => updateProfile.mutate({ school: value })}
-  isLoading={updateProfile.isPending}
-/>
+PS C:\OneShotLocal>   - Middleware that blocks unverified users
+At line:1 char:4
++   - Middleware that blocks unverified users
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:5
++   - Middleware that blocks unverified users
++     ~~~~~~~~~~
+Unexpected token 'Middleware' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-{/* Graduation Year */}
-<ProfileInlineEditField 
-  label="Graduation Year"
-  value={formState.graduationYear?.toString() || ''}
-  onSave={(value) => updateProfile.mutate({ graduationYear: parseInt(value) || null })}
-  inputType="number"
-  isLoading={updateProfile.isPending}
-/>
-```
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ---
+>>
+At line:1 char:4
++ ---
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ ---
++   ~
+The '--' operator works only on variables or on properties.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-#### Step 3: Update Mutation Functions
+PS C:\OneShotLocal> # 🧪 Testing:
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> - Register a new user (POST /api/auth/register)
+At line:1 char:2
++ - Register a new user (POST /api/auth/register)
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - Register a new user (POST /api/auth/register)
++   ~~~~~~~~
+Unexpected token 'Register' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-Ensure the mutation functions properly handle loading states and provide feedback:
+PS C:\OneShotLocal> - Simulate email verification (console.log output)
+At line:1 char:2
++ - Simulate email verification (console.log output)
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - Simulate email verification (console.log output)
++   ~~~~~~~~
+Unexpected token 'Simulate' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-```jsx
-// Update account mutation
-const updateAccount = useMutation({
-  mutationFn: async (accountData: any) => {
-    console.log("Updating account with:", accountData);
-    return apiRequest('PATCH', '/api/account/update', accountData);
-  },
-  onSuccess: (data) => {
-    console.log("Account update successful:", data);
-    queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/user'] });
-    
-    toast({
-      title: "Account updated",
-      description: "Your account information has been updated successfully.",
-    });
-  },
-  onError: (error) => {
-    console.error("Account update error:", error);
-    toast({
-      title: "Error updating account",
-      description: "There was a problem updating your account information. Please try again.",
-      variant: "destructive",
-    });
-  },
-});
+PS C:\OneShotLocal> - Login user (POST /api/auth/login)
+At line:1 char:2
++ - Login user (POST /api/auth/login)
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - Login user (POST /api/auth/login)
++   ~~~~~
+Unexpected token 'Login' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-// Update profile mutation
-const updateProfile = useMutation({
-  mutationFn: async (profileData: any) => {
-    console.log("Updating profile with:", profileData);
-    return apiRequest('PATCH', '/api/profile', profileData);
-  },
-  onSuccess: (data) => {
-    console.log("Profile update successful:", data);
-    queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
-    
-    toast({
-      title: "Profile updated",
-      description: "Your profile information has been updated successfully.",
-    });
-  },
-  onError: (error) => {
-    console.error("Profile update error:", error);
-    toast({
-      title: "Error updating profile",
-      description: "There was a problem updating your profile. Please try again.",
-      variant: "destructive",
-    });
-  },
-});
-```
+PS C:\OneShotLocal> - Try to access a protected API (future step)
+At line:1 char:2
++ - Try to access a protected API (future step)
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - Try to access a protected API (future step)
++   ~~~
+Unexpected token 'Try' in expression or statement.
+At line:1 char:6
++ - Try to access a protected API (future step)
++      ~
+The Try statement is missing its statement block.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-### 3. UI/UX Expectations
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ---
+>>
+At line:1 char:4
++ ---
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ ---
++   ~
+The '--' operator works only on variables or on properties.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-The rebuilt "My Info" section should follow these UX principles:
+PS C:\OneShotLocal> # 📸 Proof Required:
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ✅ Screenshot of Register form successfully submitting (200 OK)  
+At line:1 char:60
++ ✅ Screenshot of Register form successfully submitting (200 OK)
++                                                            ~~
+Unexpected token 'OK' in expression or statement.
+At line:1 char:59
++ ✅ Screenshot of Register form successfully submitting (200 OK)
++                                                           ~
+Missing closing ')' in expression.
+At line:1 char:62
++ ✅ Screenshot of Register form successfully submitting (200 OK)
++                                                              ~
+Unexpected token ')' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : UnexpectedToken
 
-1. **Default View**: Fields appear as static text with an "edit" pencil icon that appears on hover.
-2. **Edit Mode**: Clicking the pencil converts the field into an input with save/cancel buttons.
-3. **Loading State**: While saving, the field should display a subtle loading indicator.
-4. **Feedback**: 
-   - **Visual**: Successfully saved fields should briefly highlight with a green checkmark.
-   - **Toast**: A toast notification should confirm successful saves.
-5. **Keyboard Accessibility**: Enter saves, Escape cancels the edit.
-6. **Field Tooltips**: Where appropriate, add tooltips to explain field purpose.
+PS C:\OneShotLocal> ✅ Screenshot of Login form successfully submitting (200 OK)  
+At line:1 char:57
++ ✅ Screenshot of Login form successfully submitting (200 OK)
++                                                         ~~
+Unexpected token 'OK' in expression or statement.
+At line:1 char:56
++ ✅ Screenshot of Login form successfully submitting (200 OK)
++                                                        ~
+Missing closing ')' in expression.
+At line:1 char:59
++ ✅ Screenshot of Login form successfully submitting (200 OK)
++                                                           ~
+Unexpected token ')' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : UnexpectedToken
 
-### 4. Data Flow
+PS C:\OneShotLocal> ✅ Screenshot of email verification console log  
+✅ : The term '✅' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the 
+name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ ✅ Screenshot of email verification console log
++ ~
+    + CategoryInfo          : ObjectNotFound: (✅:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-For each field, the data flow should be:
+PS C:\OneShotLocal> ✅ Screenshot of protected route access (after login)
+after : The term 'after' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling 
+of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:41
++ ✅ Screenshot of protected route access (after login)
++                                         ~~~~~
+    + CategoryInfo          : ObjectNotFound: (after:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
 
-1. User edits a field and clicks save
-2. Field enters loading state
-3. Data is sent to the appropriate API endpoint
-4. On success:
-   - Field shows success animation
-   - Toast notification appears
-   - Cache is invalidated to refresh data
-5. On error:
-   - Error toast notification appears
-   - Field reverts to previous value
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ---
+>>
+At line:1 char:4
++ ---
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ ---
++   ~
+The '--' operator works only on variables or on properties.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-## Testing Plan
+PS C:\OneShotLocal> # 📜 Reminders:
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> - No passport.js
+At line:1 char:2
++ - No passport.js
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - No passport.js
++   ~~
+Unexpected token 'No' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-### Manual Testing Checklist
+PS C:\OneShotLocal> - No legacy copy-paste
+At line:1 char:2
++ - No legacy copy-paste
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - No legacy copy-paste
++   ~~
+Unexpected token 'No' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-#### Account Fields
-- [ ] Email field updates via `/api/account/update` and shows in public profile
-- [ ] Phone field updates via `/api/account/update` and shows correctly if made public
+PS C:\OneShotLocal> - All forms use React Hook Form + Zod for validation
+At line:1 char:2
++ - All forms use React Hook Form + Zod for validation
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - All forms use React Hook Form + Zod for validation
++   ~~~
+Unexpected token 'All' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-#### Profile Fields
-- [ ] Jersey Number updates via `/api/profile` and shows in public profile
-- [ ] Position updates via `/api/profile` and shows in public profile
-- [ ] School updates via `/api/profile` and shows in public profile
-- [ ] Graduation Year updates via `/api/profile` and shows in public profile
-- [ ] Twitter Handle updates via `/api/profile` and shows in public profile
+PS C:\OneShotLocal> - Use Tailwind for simple input styling
+At line:1 char:2
++ - Use Tailwind for simple input styling
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - Use Tailwind for simple input styling
++   ~~~
+Unexpected token 'Use' in expression or statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-#### UI Behaviors
-- [ ] Edit mode activates on clicking the pencil icon
-- [ ] Loading state shows while saving
-- [ ] Success animation plays after successful save
-- [ ] Toast notification appears after successful save
-- [ ] Fields validate before submitting (e.g., email format, number fields)
-- [ ] Public profile shows updated information after save
+PS C:\OneShotLocal> - If anything is missing from the instruction, **STOP and ask before guessing.**
+At line:1 char:2
++ - If anything is missing from the instruction, **STOP and ask before  ...
++  ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ - If anything is missing from the instruction, **STOP and ask before  ...
++   ~~
+Unexpected token 'If' in expression or statement.
+At line:1 char:5
++ - If anything is missing from the instruction, **STOP and ask before  ...
++     ~
+Missing '(' after 'If' in if statement.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-#### Error Handling
-- [ ] Invalid inputs show appropriate error messages
-- [ ] Error toast appears if save fails
-- [ ] Fields revert to previous value on save failure
+PS C:\OneShotLocal> 
+PS C:\OneShotLocal> ---
+>>
+At line:1 char:4
++ ---
++    ~
+Missing expression after unary operator '-'.
+At line:1 char:3
++ ---
++   ~
+The '--' operator works only on variables or on properties.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : MissingExpressionAfterOperator
 
-## Implementation Notes
-
-1. **State Management**: Use the existing `formState` to track current values.
-2. **Field Validation**: For simplicity, rely on browser's native validation for input types.
-3. **API Field Mapping**: Be careful with field name mappings (e.g., `phoneNumber` in the UI maps to `phone` in the API).
-4. **Empty Values**: Handle `null`/`undefined` values gracefully to avoid "undefined" displaying in fields.
-5. **Loading States**: Connect the `isPending` state from mutations to the `isLoading` prop of the field.
-
-## Future Enhancements (Potential Next Steps)
-
-1. Add custom validation for specific fields (e.g., graduation year range, phone number format)
-2. Improve field-specific input components (e.g., position selector dropdown)
-3. Add "reset all" or "cancel all" functionality if multiple fields are being edited
-4. Add field-specific error handling for better user feedback
+PS C:\OneShotLocal> 

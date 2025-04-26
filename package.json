@@ -2,24 +2,27 @@
   "name": "oneshot",
   "version": "1.0.0",
   "type": "module",
-"scripts": {
-  "dev": "concurrently \"vite\" \"node --loader ts-node/esm src/backend/index.ts\"",
-  "frontend": "vite",
-  "backend": "node --loader ts-node/esm src/backend/index.ts",
-  "build": "vite build",
-  "kill": "pkill -f vite || true && pkill -f ts-node || true"
-},
+  "scripts": {
+    "dev": "concurrently \"vite\" \"npm run start-backend\"",
+    "build-backend": "tsc -p tsconfig.backend.json",
+    "start-backend": "npm run build-backend && node dist-backend/backend/index.js"
+  },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.9",
     "autoprefixer": "^10.4.14",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
     "drizzle-orm": "^0.29.0",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
     "postcss": "^8.4.27",
     "postgres": "^3.4.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwindcss": "^3.3.2",
     "vite": "^6.3.3",
-    "zod": "^3.22.4"
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
