@@ -15,6 +15,13 @@
       "when": 1745813893397,
       "tag": "0001_illegal_shinko_yamashiro",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1745838779397,
+      "tag": "0002_tidy_iron_fist",
+      "breakpoints": true
     }
   ]
 }
