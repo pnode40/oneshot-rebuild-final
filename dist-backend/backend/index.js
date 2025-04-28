@@ -1,31 +1,32 @@
 import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
 import authRouter from './routes/auth.js';
-// 👇 NEW: Mock in-memory DB
-const mockDb = {
-    users: {
-        records: [],
-        async findOne(query) {
-            return this.records.find((user) => user.email === query.email) || null;
-        },
-        async insertOne(user) {
-            const id = Math.random().toString(36).substring(2, 15);
-            const newUser = { ...user, _id: id };
-            this.records.push(newUser);
-            return { insertedId: id };
-        }
-    }
-};
+import timelineRouter from './routes/timeline.js';
+import profileRouter from './routes/profile.js';
+import dbTestRouter from './routes/dbTest.js';
+import getPort from 'get-port';
+dotenv.config();
 const app = express();
-const port = process.env.PORT || 3000;
+app.use(cors());
 app.use(express.json());
-app.use((req, res, next) => {
-    req.db = mockDb;
-    next();
-});
+// Routers
 app.use('/api/auth', authRouter);
+app.use('/api/timeline', timelineRouter);
+app.use('/api/profile', profileRouter);
+app.use('/api', dbTestRouter);
+// Health Check
 app.get('/api/health', (_req, res) => {
     res.json({ status: 'Server is healthy!' });
 });
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+async function startServer() {
+    const preferredPort = process.env.PORT ? Number(process.env.PORT) : 3000;
+    const port = await getPort({ port: preferredPort });
+    app.listen(port, () => {
+        console.log(`🚀 Backend server running stable at http://localhost:${port}`);
+    });
+}
+startServer().catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
 });

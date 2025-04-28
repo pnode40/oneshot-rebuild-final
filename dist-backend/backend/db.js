@@ -1,4 +1,13 @@
 // src/backend/db.ts
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { neonConfig, Pool } from '@neondatabase/serverless';
+import dotenv from 'dotenv';
+import ws from 'ws';
+dotenv.config();
+// Configure WebSocket explicitly for Neon
+neonConfig.webSocketConstructor = ws;
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle(pool);
 export const getDbClient = async () => {
     // Temporary mock DB client
     return {

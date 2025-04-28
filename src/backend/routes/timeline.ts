@@ -1,5 +1,5 @@
 import express from 'express';
-import { TimelineData, TimelinePhase, TimelineTask } from '../../shared/types/timelineTypes';
+import { TimelineData, TimelinePhase, TimelineTask } from '../../shared/types/timelineTypes.js';
 
 const router = express.Router();
 
@@ -52,7 +52,7 @@ router.post('/task/:taskId/complete', (req, res) => {
   
   // Find and update the task
   for (const phase of mockDbTimeline.phases) {
-    const task = phase.tasks.find(t => t.id === taskId);
+    const task = phase.tasks.find((t: TimelineTask) => t.id === taskId);
     if (task) {
       task.completed = true;
       return res.json({ success: true, message: 'Task marked as completed' });
