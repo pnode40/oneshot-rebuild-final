@@ -5,6 +5,7 @@ import authRouter from './routes/auth.js';
 import timelineRouter from './routes/timeline.js';
 import profileRouter from './routes/profile.js';
 import dbTestRouter from './routes/dbTest.js';
+import postsRouter from './routes/posts.js';
 import getPort from 'get-port';
 dotenv.config();
 const app = express();
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/timeline', timelineRouter);
 app.use('/api/profile', profileRouter);
+app.use('/api/posts', postsRouter);
 app.use('/api', dbTestRouter);
 // Health Check
 app.get('/api/health', (_req, res) => {

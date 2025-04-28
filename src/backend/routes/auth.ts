@@ -4,9 +4,11 @@ import { registerSchema, loginSchema } from '../../shared/schemas/authSchemas.js
 import { signJwt } from '../../shared/utils/jwt.js';
 import { sendVerificationEmail } from '../services/emailService.js';
 import { AuthResponse } from '../../shared/types/userTypes.js';
+import { eq } from 'drizzle-orm';
+import { db, schema } from '../db.js';
+import { requireAuth } from '../middleware/authMiddleware.js';
 
 const router = Router();
-
 
 // Register endpoint
 router.post('/register', async (req, res) => {
@@ -14,8 +16,8 @@ router.post('/register', async (req, res) => {
     const { email, password } = registerSchema.parse(req.body);
     
     // Check if user already exists
-    const existingUser = await req.db.users.findOne({ email });
-    if (existingUser) {
+    const existingUsers = await db.select().from(schema.users).where(eq(schema.users.email, email));
+    if (existingUsers.length > 0) {
       return res.status(400).json({
         success: false,
         message: 'Email already registered'
@@ -26,16 +28,13 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const user = await req.db.users.insertOne({
+    const [newUser] = await db.insert(schema.users).values({
       email,
-      password: hashedPassword,
-      verified: false,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
+      passwordHash: hashedPassword,
+    }).returning();
 
     // Generate verification token
-    const verificationToken = signJwt({ userId: user.insertedId, email });
+    const verificationToken = signJwt({ userId: String(newUser.id), email });
 
     // Send verification email
     await sendVerificationEmail(email, verificationToken);
@@ -45,6 +44,7 @@ router.post('/register', async (req, res) => {
       message: 'Registration successful. Please check your email to verify your account.'
     });
   } catch (error) {
+    console.error('Registration error:', error);
     return res.status(400).json({
       success: false,
       message: error instanceof Error ? error.message : 'Registration failed'
@@ -58,16 +58,17 @@ router.post('/login', async (req, res) => {
     const { email, password } = loginSchema.parse(req.body);
 
     // Find user by email
-    const user = await req.db.users.findOne({ email });
-    if (!user) {
+    const foundUsers = await db.select().from(schema.users).where(eq(schema.users.email, email));
+    if (foundUsers.length === 0) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
+    const user = foundUsers[0];
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
       return res.status(401).json({
         success: false,
@@ -75,18 +76,8 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // (Commenting out email verification check for now)
-    /*
-    if (!user.verified) {
-      return res.status(403).json({
-        success: false,
-        message: 'Please verify your email first'
-      });
-    }
-    */
-
     // Generate JWT token
-    const token = signJwt({ userId: user._id, email });
+    const token = signJwt({ userId: String(user.id), email });
 
     // Return login success response
     const response: AuthResponse = {
@@ -94,24 +85,21 @@ router.post('/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id: user._id,
+        id: user.id,
         email: user.email,
-        verified: user.verified,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        createdAt: user.createdAt || new Date()
       }
     };
 
     return res.json(response);
   } catch (error) {
+    console.error('Login error:', error);
     return res.status(400).json({
       success: false,
       message: error instanceof Error ? error.message : 'Login failed'
     });
   }
 });
-
-import { requireAuth } from '../middleware/authMiddleware.js'; // already imported probably
 
 // Protected route
 router.get('/protected/test', requireAuth, (req, res) => {

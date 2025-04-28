@@ -1,10 +1,7 @@
 export interface User {
-  id: string;
+  id: number;
   email: string;
-  password: string;
-  verified: boolean;
   createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface JwtPayload {
@@ -18,7 +15,7 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   token?: string;
-  user?: Omit<User, 'password'>;
+  user?: User;
 }
 
 export interface RegisterRequest {
