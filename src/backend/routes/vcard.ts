@@ -37,7 +37,11 @@ END:VCARD
     `.trim();
 
     res.setHeader('Content-Type', 'text/vcard');
-    res.setHeader('Content-Disposition', `attachment; filename="${profile.fullName.replace(/\s+/g, '_')}_OneShot.vcf"`);
+    if (profile.fullName) {
+      res.setHeader('Content-Disposition', `attachment; filename="${profile.fullName.replace(/\s+/g, '_')}_OneShot.vcf"`);
+    } else {
+      res.setHeader('Content-Disposition', 'attachment; filename="OneShot.vcf"');
+    }
 
     res.send(vcard);
   } catch (error) {

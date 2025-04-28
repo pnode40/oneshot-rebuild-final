@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"vite\" \"npm run start-backend\"",
     "build-backend": "tsc -p tsconfig.backend.json",
-    "start-backend": "npm run build-backend && node dist-backend/backend/index.js",
+    "start-backend": "tsx src/backend/server.ts",
     "generate": "drizzle-kit generate",
     "migrate": "tsx src/backend/migrate.ts",
     "push": "drizzle-kit push --accept-data-loss",
@@ -13,6 +13,7 @@
     "simulate-journey": "tsx scripts/simulate-timeline-journey.ts"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.7.0",
     "@neondatabase/serverless": "^1.0.0",
     "@resvg/resvg-js": "^2.6.2",
     "@types/bcryptjs": "^2.4.6",
@@ -24,6 +25,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/ws": "^8.18.1",
     "autoprefixer": "^10.4.14",
+    "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",

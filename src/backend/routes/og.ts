@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { db } from '../db';
-import { profiles } from '../schema';
+import { db } from '../db.js';
+import { profiles } from '../schema.js';
 import { sql } from 'drizzle-orm';
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
@@ -57,14 +57,14 @@ router.get('/:userId', async (req, res) => {
               type: 'div',
               props: {
                 style: { fontSize: '48px', fontWeight: 'bold', marginBottom: '20px' },
-                children: profile.firstName + ' ' + profile.lastName,
+                children: profile.fullName || 'Athlete',
               },
             },
             {
               type: 'div',
               props: {
                 style: { fontSize: '32px', marginBottom: '10px' },
-                children: profile.position,
+                children: profile.position || 'Athlete',
               },
             },
             {
@@ -76,7 +76,7 @@ router.get('/:userId', async (req, res) => {
             },
           ],
         },
-      },
+      } as any, // Type assertion to fix satori type issue
       {
         width: 1200,
         height: 630,

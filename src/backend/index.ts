@@ -1,5 +1,7 @@
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
 import cors from 'cors';
 import authRouter from './routes/auth.js';
 import timelineRouter from './routes/timeline.js';
@@ -7,14 +9,12 @@ import profileRouter from './routes/profile.js';
 import dbTestRouter from './routes/dbTest.js';
 import postsRouter from './routes/posts.js';
 import metricsRouter from './routes/metrics.js';
-import getPort from 'get-port';
 import publicProfileRouter from './routes/publicProfile.js';
 import vcardRouter from './routes/vcard.js';
 import emailChecklistRouter from './routes/emailChecklist.js';
 import uploadRouter from './routes/upload.js';
 import ogRouter from './routes/og.js';
-
-dotenv.config();
+import getPort from 'get-port';
 
 const app = express();
 app.use(cors());

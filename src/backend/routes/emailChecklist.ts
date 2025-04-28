@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { db } from '../db';
-import { users } from '../schema';
+import { db } from '../db.js';
+import { users } from '../schema.js';
 import { sql } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
 
