@@ -1,4 +1,5 @@
 import Layout from './components/Layout'; // Import the Layout component
+import ProfileInfoForm from './components/ProfileInfoForm'; // Import the form component
 import './App.css'
 
 function App() {
@@ -7,7 +8,8 @@ function App() {
   return (
     <Layout>
       <main>
-        <p>Welcome to OneShot</p>
+        {/* <p>Welcome to OneShot</p> // Optionally remove placeholder */}
+        <ProfileInfoForm />
         {/* Add your main page content here */}
       </main>
     </Layout>
