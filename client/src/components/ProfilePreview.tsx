@@ -1,39 +1,47 @@
 import React from 'react';
 
+// Update props interface to match the structure passed from App (formatted data)
 interface ProfilePreviewProps {
   fullName: string;
   position: string;
   gradYear: string;
-  school: string;
+  school: string; // Ensure school is included
   cityState: string;
-  height: string;
-  weight: string;
-  fortyYardDash: string;
-  benchPress: string;
+  height: string; // Expect formatted height
+  weight: string; // Expect formatted weight
+  fortyYardDash: string; // Expect formatted time
+  benchPress: string; // Expect formatted weight
+  // Add any other fields from ProfileData if needed directly
+  highSchool?: string; // Make original optional if school is primary
 }
 
 const ProfilePreview: React.FC<ProfilePreviewProps> = ({
-  fullName = "Jalen Smith",
-  position = "WR",
-  gradYear = "2026",
-  school = "Sunset High School",
-  cityState = "Austin, TX",
-  height = "6'1\"",
-  weight = "185 lbs",
-  fortyYardDash = "4.5s",
-  benchPress = "225 lbs",
+  fullName,
+  position,
+  gradYear,
+  school, // Use passed school prop
+  cityState,
+  height,
+  weight,
+  fortyYardDash,
+  benchPress,
 }) => {
 
   // Helper component for metric items
-  const MetricItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+  const MetricItem: React.FC<{ label: string; value: string | undefined }> = ({ label, value }) => (
     <div>
       <p className="text-oneshot-label text-sm font-medium" style={{ fontVariant: 'small-caps' }}>{label}</p>
-      <p className="text-oneshot-text font-medium">{value}</p>
+      {/* Render value only if it exists and is not empty */}
+      <p className="text-oneshot-text font-medium">{value || '-'}</p>
     </div>
   );
 
+  // Use school prop, fallback to highSchool if needed and available
+  const displaySchool = school || '';
+
   return (
-    <div className="max-w-screen-md mx-auto p-4 bg-white rounded shadow-lg my-4">
+    <div className="p-4 bg-white rounded shadow-lg sticky top-[calc(theme(spacing.20)+1rem)]"> {/* Adjust top based on header height */}
+      <h2 className="text-xl font-semibold mb-4 text-oneshot-text">Live Preview</h2>
       <div className="flex flex-col md:flex-row items-center md:items-start">
         {/* Circular Image Placeholder */}
         <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
@@ -44,12 +52,12 @@ const ProfilePreview: React.FC<ProfilePreviewProps> = ({
 
         {/* Profile Info */}
         <div className="flex-grow text-center md:text-left">
-          <h1 className="text-2xl md:text-3xl font-bold text-oneshot-text mb-1">{fullName}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-oneshot-text mb-1">{fullName || 'Full Name'}</h1>
           <p className="text-oneshot-label font-medium mb-2" style={{ fontVariant: 'small-caps' }}>
-            {position} | Class of {gradYear}
+            {position || 'Position'} | Class of {gradYear || 'Year'}
           </p>
-          <p className="text-oneshot-text text-sm mb-1">{school}</p>
-          <p className="text-oneshot-text text-sm mb-4">{cityState}</p>
+          <p className="text-oneshot-text text-sm mb-1">{displaySchool || 'School Name'}</p>
+          <p className="text-oneshot-text text-sm mb-4">{cityState || 'City, State'}</p>
         </div>
       </div>
 
