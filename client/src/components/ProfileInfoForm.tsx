@@ -1,242 +1,211 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { ProfileData } from '../App'; // Import the shared type
 
-// Define props for the component
-interface ProfileInfoFormProps {
+export interface ProfileData {
+  fullName: string;
+  email: string;
+  highSchool: string;
+  position: string;
+  gradYear: string;
+  cityState: string;
+  heightFt: string;
+  heightIn: string;
+  weight: string;
+  fortyYardDash: string;
+  benchPress: string;
+}
+
+interface Props {
   formData: ProfileData;
   onFormChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-// Define the shape for validation errors
-interface FormErrors {
-  fullName?: string;
-  email?: string;
-  highSchool?: string;
-  position?: string;
-  heightFt?: string;
-  heightIn?: string;
-  weight?: string;
-  // Add other fields as needed
-}
+const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-const ProfileInfoForm: React.FC<ProfileInfoFormProps> = ({ formData, onFormChange }) => {
-  const [errors, setErrors] = useState<FormErrors>({});
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
 
-  // Basic email validation regex
-  const validateEmail = (email: string): boolean => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
+    const requiredFields = ['fullName', 'email', 'highSchool', 'position'];
+    requiredFields.forEach((field) => {
+      if (!formData[field as keyof ProfileData]?.trim()) {
+        newErrors[field] = `${field} is required`;
+      }
+    });
+
+    if (formData.email && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)) {
+      newErrors.email = 'Enter a valid email address';
+    }
+
+    const numberFields = ['heightFt', 'heightIn', 'weight', 'fortyYardDash', 'benchPress'];
+    numberFields.forEach((field) => {
+      const value = formData[field as keyof ProfileData];
+      if (value && isNaN(Number(value))) {
+        newErrors[field] = 'Must be a number';
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  // Basic number validation (checks if value is a number string)
-  const isNumber = (value: string): boolean => {
-    return !isNaN(Number(value)) && value.trim() !== '';
-  };
-
-  const validateForm = (): FormErrors => {
-    const newErrors: FormErrors = {};
-    if (!formData.fullName.trim()) newErrors.fullName = 'Full Name is required';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Email format is invalid';
-    }
-    if (!formData.highSchool.trim()) newErrors.highSchool = 'High School is required';
-    if (!formData.position.trim()) newErrors.position = 'Position is required';
-
-    if (formData.heightFt && !isNumber(formData.heightFt)) {
-      newErrors.heightFt = 'Height (ft) must be a number';
-    }
-    if (formData.heightIn && !isNumber(formData.heightIn)) {
-      newErrors.heightIn = 'Height (in) must be a number';
-    }
-    if (formData.weight && !isNumber(formData.weight)) {
-      newErrors.weight = 'Weight must be a number';
-    }
-    // Add more number validations if needed (fortyYardDash, benchPress)
-
-    return newErrors;
-  };
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    const validationErrors = validateForm();
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length === 0) {
-      // No errors, proceed with submission (currently just logging)
-      console.log('Submitting valid data:', formData);
-      // TODO: Add actual submission logic (e.g., API call)
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      console.log('Form is valid:', formData);
     } else {
-      console.log('Validation failed:', validationErrors);
+      console.log('Validation errors:', errors);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border rounded shadow-md bg-white space-y-4">
-      <h2 className="text-xl font-semibold text-oneshot-text">Edit Profile Information</h2>
-
-      {/* Full Name */}
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      {/* Basic Fields */}
       <div>
-        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+        <label className="block text-sm font-medium text-gray-700">Full Name</label>
         <input
           type="text"
-          id="fullName"
+          name="fullName"
           value={formData.fullName}
           onChange={onFormChange}
-          className={`block w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${errors.fullName ? 'border-red-500' : 'border-gray-300'}`}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
         />
         {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
       </div>
 
-      {/* Email */}
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+        <label className="block text-sm font-medium text-gray-700">Email</label>
         <input
           type="email"
-          id="email"
+          name="email"
           value={formData.email}
           onChange={onFormChange}
-          className={`block w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
         />
         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
       </div>
 
-      {/* High School */}
       <div>
-        <label htmlFor="highSchool" className="block text-sm font-medium text-gray-700 mb-1">High School</label>
+        <label className="block text-sm font-medium text-gray-700">High School</label>
         <input
           type="text"
-          id="highSchool"
+          name="highSchool"
           value={formData.highSchool}
           onChange={onFormChange}
-          className={`block w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${errors.highSchool ? 'border-red-500' : 'border-gray-300'}`}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
         />
         {errors.highSchool && <p className="text-red-500 text-xs mt-1">{errors.highSchool}</p>}
       </div>
 
-      {/* City, State */}
       <div>
-        <label htmlFor="cityState" className="block text-sm font-medium text-gray-700 mb-1">City, State</label>
+        <label className="block text-sm font-medium text-gray-700">Position</label>
         <input
           type="text"
-          id="cityState"
-          value={formData.cityState}
-          onChange={onFormChange}
-          className="block w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="e.g., Austin, TX"
-        />
-        {/* No validation needed for this field based on requirements */}
-      </div>
-
-      {/* Graduation Year */}
-      <div>
-        <label htmlFor="gradYear" className="block text-sm font-medium text-gray-700 mb-1">Graduation Year</label>
-        <input
-          type="number"
-          id="gradYear"
-          value={formData.gradYear}
-          onChange={onFormChange}
-          className="block w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-          placeholder="e.g., 2026"
-        />
-        {/* No validation needed for this field based on requirements */}
-      </div>
-
-      <h3 className="text-lg font-semibold pt-4 border-t text-oneshot-text">Athletic Metrics</h3>
-
-      {/* Height */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Height</label>
-        <div className="flex space-x-2">
-          <div className="flex-1">
-            <label htmlFor="heightFt" className="sr-only">Height (Feet)</label>
-            <input
-              type="number"
-              id="heightFt"
-              placeholder="Feet"
-              value={formData.heightFt}
-              onChange={onFormChange}
-              className={`block w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${errors.heightFt ? 'border-red-500' : 'border-gray-300'}`}
-            />
-            {errors.heightFt && <p className="text-red-500 text-xs mt-1">{errors.heightFt}</p>}
-          </div>
-          <div className="flex-1">
-            <label htmlFor="heightIn" className="sr-only">Height (Inches)</label>
-            <input
-              type="number"
-              id="heightIn"
-              placeholder="Inches"
-              value={formData.heightIn}
-              onChange={onFormChange}
-              className={`block w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${errors.heightIn ? 'border-red-500' : 'border-gray-300'}`}
-            />
-            {errors.heightIn && <p className="text-red-500 text-xs mt-1">{errors.heightIn}</p>}
-          </div>
-        </div>
-      </div>
-
-      {/* Weight */}
-      <div>
-        <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">Weight (lbs)</label>
-        <input
-          type="number"
-          id="weight"
-          value={formData.weight}
-          onChange={onFormChange}
-          className={`block w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${errors.weight ? 'border-red-500' : 'border-gray-300'}`}
-        />
-        {errors.weight && <p className="text-red-500 text-xs mt-1">{errors.weight}</p>}
-      </div>
-
-      {/* 40-Yard Dash */}
-      <div>
-        <label htmlFor="fortyYardDash" className="block text-sm font-medium text-gray-700 mb-1">40-Yard Dash (seconds)</label>
-        <input
-          type="number"
-          step="0.01"
-          id="fortyYardDash"
-          value={formData.fortyYardDash}
-          onChange={onFormChange}
-          className="block w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-        />
-        {/* Add number validation error display if needed */}
-      </div>
-
-      {/* Bench Press */}
-      <div>
-        <label htmlFor="benchPress" className="block text-sm font-medium text-gray-700 mb-1">Bench Press Max (lbs)</label>
-        <input
-          type="number"
-          id="benchPress"
-          value={formData.benchPress}
-          onChange={onFormChange}
-          className="block w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-        />
-        {/* Add number validation error display if needed */}
-      </div>
-
-      {/* Position */}
-      <div>
-        <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-        <input
-          type="text"
-          id="position"
+          name="position"
           value={formData.position}
           onChange={onFormChange}
-          className={`block w-full p-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${errors.position ? 'border-red-500' : 'border-gray-300'}`}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
         />
         {errors.position && <p className="text-red-500 text-xs mt-1">{errors.position}</p>}
       </div>
 
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-4"
-      >
-        Save Profile
-      </button>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Graduation Year</label>
+        <input
+          type="text"
+          name="gradYear"
+          value={formData.gradYear}
+          onChange={onFormChange}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">City, State</label>
+        <input
+          type="text"
+          name="cityState"
+          value={formData.cityState}
+          onChange={onFormChange}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+        />
+      </div>
+
+      {/* Height (Feet & Inches) */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Height</label>
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            name="heightFt"
+            placeholder="Feet"
+            value={formData.heightFt}
+            onChange={onFormChange}
+            className="mt-1 block w-1/2 p-2 border border-gray-300 rounded-md"
+          />
+          <input
+            type="text"
+            name="heightIn"
+            placeholder="Inches"
+            value={formData.heightIn}
+            onChange={onFormChange}
+            className="mt-1 block w-1/2 p-2 border border-gray-300 rounded-md"
+          />
+        </div>
+        {(errors.heightFt || errors.heightIn) && (
+          <p className="text-red-500 text-xs mt-1">
+            {errors.heightFt || errors.heightIn}
+          </p>
+        )}
+      </div>
+
+      {/* Athletic Metrics */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Weight (lbs)</label>
+        <input
+          type="text"
+          name="weight"
+          value={formData.weight}
+          onChange={onFormChange}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+        />
+        {errors.weight && <p className="text-red-500 text-xs mt-1">{errors.weight}</p>}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">40-Yard Dash (s)</label>
+        <input
+          type="text"
+          name="fortyYardDash"
+          value={formData.fortyYardDash}
+          onChange={onFormChange}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+        />
+        {errors.fortyYardDash && <p className="text-red-500 text-xs mt-1">{errors.fortyYardDash}</p>}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Bench Press (lbs)</label>
+        <input
+          type="text"
+          name="benchPress"
+          value={formData.benchPress}
+          onChange={onFormChange}
+          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+        />
+        {errors.benchPress && <p className="text-red-500 text-xs mt-1">{errors.benchPress}</p>}
+      </div>
+
+      {/* Submit Button */}
+      <div>
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Submit
+        </button>
+      </div>
     </form>
   );
 };
 
-export default ProfileInfoForm; 
+export default ProfileInfoForm;

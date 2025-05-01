@@ -35,10 +35,10 @@ function App() {
   });
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
+    const { name, value } = e.target;
     setProfileData(prevState => ({
       ...prevState,
-      [id]: value,
+      [name]: value,
     }));
   };
 
