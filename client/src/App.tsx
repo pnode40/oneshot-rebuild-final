@@ -1,7 +1,6 @@
-import React, { useState, ChangeEvent } from 'react';
-import Layout from './components/Layout'; // Import the Layout component
-import ProfileInfoForm from './components/ProfileInfoForm'; // Import the form component
-import ProfilePreview from './components/ProfilePreview'; // Import the preview component
+import React, { useState, useEffect, ChangeEvent } from 'react';
+import ProfileInfoForm from './components/ProfileInfoForm';
+import ProfilePreview from './components/ProfilePreview';
 import './App.css'
 
 // Define the shape of the profile data
@@ -10,8 +9,8 @@ export interface ProfileData {
   email: string;
   highSchool: string;
   position: string;
-  gradYear: string; // Added for preview
-  cityState: string; // Added for preview
+  gradYear: string;
+  cityState: string;
   heightFt: string;
   heightIn: string;
   weight: string;
@@ -19,57 +18,59 @@ export interface ProfileData {
   benchPress: string;
 }
 
-function App() {
-  const [profileData, setProfileData] = useState<ProfileData>({
-    fullName: '',
-    email: '',
-    highSchool: '',
-    position: '',
-    gradYear: '', // Initialize all fields
-    cityState: '',
-    heightFt: '',
-    heightIn: '',
-    weight: '',
-    fortyYardDash: '',
-    benchPress: '',
-  });
+const defaultProfileData: ProfileData = {
+  fullName: '',
+  email: '',
+  highSchool: '',
+  position: '',
+  gradYear: '',
+  cityState: '',
+  heightFt: '',
+  heightIn: '',
+  weight: '',
+  fortyYardDash: '',
+  benchPress: '',
+};
 
+function App() {
+  const [formData, setFormData] = useState<ProfileData>(defaultProfileData);
+
+  // ✅ Load from localStorage on first render
+  useEffect(() => {
+    const stored = localStorage.getItem('profileData');
+    if (stored) {
+      try {
+        setFormData(JSON.parse(stored));
+      } catch (err) {
+        console.error('Failed to parse localStorage:', err);
+      }
+    }
+  }, []);
+
+  // ✅ Save to localStorage on every field change
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setProfileData(prevState => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-
-  // Format data for preview (e.g., combine height, add units)
-  const previewData = {
-    ...profileData,
-    school: profileData.highSchool,
-    height: profileData.heightFt && profileData.heightIn ? `${profileData.heightFt}'${profileData.heightIn}"` : '',
-    weight: profileData.weight ? `${profileData.weight} lbs` : '',
-    fortyYardDash: profileData.fortyYardDash ? `${profileData.fortyYardDash}s` : '',
-    benchPress: profileData.benchPress ? `${profileData.benchPress} lbs` : '',
+    const updated = { ...formData, [name]: value };
+    setFormData(updated);
+    localStorage.setItem('profileData', JSON.stringify(updated));
   };
 
   return (
-    <Layout>
-      <main className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Form Column */}
-          <div>
-            <ProfileInfoForm
-              formData={profileData}
-              onFormChange={handleInputChange}
-            />
-          </div>
-          {/* Preview Column */}
-          <div>
-            <ProfilePreview {...previewData} />
-          </div>
+    // Removed Layout component for simplification
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Athlete Profile</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Form Column */}
+        <div>
+          <ProfileInfoForm formData={formData} onFormChange={handleInputChange} />
         </div>
-      </main>
-    </Layout>
+        {/* Preview Column */}
+        <div>
+          {/* Passing formData directly to preview */}
+          <ProfilePreview profile={formData} /> 
+        </div>
+      </div>
+    </div>
   );
 }
 
