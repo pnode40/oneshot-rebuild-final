@@ -1,7 +1,9 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../db/client';
 import { profiles } from '../db/schema';
+import { eq } from 'drizzle-orm';
+import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -24,8 +26,16 @@ const profileSchema = z.object({
 type ProfileData = z.infer<typeof profileSchema>;
 
 // Define handler function separately
-async function createProfile(req: Request, res: Response) {
+async function createProfile(req: AuthRequest, res: Response) {
   try {
+    // Ensure user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+    }
+
     // Validate request body
     const validationResult = profileSchema.safeParse(req.body);
     
@@ -39,7 +49,20 @@ async function createProfile(req: Request, res: Response) {
     const validatedData = validationResult.data;
     
     try {
-      // Insert the validated data into the profiles table
+      // Check if user already has a profile
+      const existingProfile = await db.query.profiles.findFirst({
+        where: eq(profiles.userId, req.user.userId)
+      });
+
+      if (existingProfile) {
+        return res.status(409).json({
+          success: false,
+          message: 'User already has a profile',
+          profileId: existingProfile.id
+        });
+      }
+
+      // Insert the validated data into the profiles table with the user ID
       const result = await db.insert(profiles)
         .values({
           fullName: validatedData.fullName,
@@ -52,7 +75,8 @@ async function createProfile(req: Request, res: Response) {
           heightIn: validatedData.heightIn,
           weight: validatedData.weight,
           fortyYardDash: validatedData.fortyYardDash,
-          benchPress: validatedData.benchPress
+          benchPress: validatedData.benchPress,
+          userId: req.user.userId // Associate profile with the authenticated user
         })
         .returning();
       
@@ -81,8 +105,44 @@ async function createProfile(req: Request, res: Response) {
   }
 }
 
-// GET all profiles
-router.get('/all', async (req, res) => {
+// GET user's own profile
+router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    // Ensure user is authenticated (redundant with middleware but keeping for clarity)
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+    }
+
+    // Get the authenticated user's profile
+    const userProfile = await db.query.profiles.findFirst({
+      where: eq(profiles.userId, req.user.userId)
+    });
+
+    if (!userProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profile not found for this user'
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      profile: userProfile 
+    });
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to retrieve profile from database.' 
+    });
+  }
+});
+
+// GET all profiles - restricted to recruiters and admins
+router.get('/all', authenticate, authorize(['recruiter', 'admin']), async (req, res) => {
   try {
     const allProfiles = await db.query.profiles.findMany();
     res.json({ success: true, profiles: allProfiles });
@@ -95,7 +155,7 @@ router.get('/all', async (req, res) => {
   }
 });
 
-// POST /api/profile - Create a new athlete profile
-router.post('/', createProfile);
+// POST /api/profile - Create a new athlete profile (protected route)
+router.post('/', authenticate, createProfile);
 
 export default router; 

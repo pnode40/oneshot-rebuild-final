@@ -1,4 +1,5 @@
-import { pgTable, serial, varchar, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp, integer } from 'drizzle-orm/pg-core';
+import { users, userRoleEnum } from './schema/users';
 
 export const profiles = pgTable('profiles', {
   id: serial('id').primaryKey(),
@@ -13,5 +14,10 @@ export const profiles = pgTable('profiles', {
   weight: varchar('weight', { length: 8 }),
   fortyYardDash: varchar('forty_yard_dash', { length: 8 }),
   benchPress: varchar('bench_press', { length: 8 }),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
+
+export { users, userRoleEnum };
