@@ -1,7 +1,12 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import ProfileInfoForm from './components/ProfileInfoForm';
 import ProfilePreview from './components/ProfilePreview';
-import './App.css'
+import Login from './components/Login';
+import Register from './components/Register';
+import Layout from './components/Layout';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import './App.css';
 
 // Define the shape of the profile data
 export interface ProfileData {
@@ -18,60 +23,132 @@ export interface ProfileData {
   benchPress: string;
 }
 
-const defaultProfileData: ProfileData = {
-  fullName: '',
-  email: '',
-  highSchool: '',
-  position: '',
-  gradYear: '',
-  cityState: '',
-  heightFt: '',
-  heightIn: '',
-  weight: '',
-  fortyYardDash: '',
-  benchPress: '',
+// Protected route component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-40">Loading...</div>;
+  }
+  
+  if (!isAuthenticated) {
+    console.log("User not authenticated, redirecting to login...");
+    return <Navigate to="/login" />;
+  }
+  
+  return <>{children}</>;
 };
 
-function App() {
-  const [formData, setFormData] = useState<ProfileData>(defaultProfileData);
+// Public route component that redirects authenticated users
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-40">Loading...</div>;
+  }
+  
+  if (isAuthenticated) {
+    console.log("User already authenticated, redirecting to home...");
+    return <Navigate to="/" />;
+  }
+  
+  return <>{children}</>;
+};
 
-  // ✅ Load from localStorage on first render
-  useEffect(() => {
-    const stored = localStorage.getItem('profileData');
-    if (stored) {
-      try {
-        setFormData(JSON.parse(stored));
-      } catch (err) {
-        console.error('Failed to parse localStorage:', err);
-      }
-    }
-  }, []);
+// 404 Not Found component
+const NotFound: React.FC = () => {
+  return (
+    <div className="flex flex-col items-center justify-center h-64">
+      <h1 className="text-2xl font-bold mb-4">404 - Page Not Found</h1>
+      <p className="mb-4">The page you are looking for doesn't exist.</p>
+      <Link to="/" className="text-blue-600 hover:underline">Return to Home</Link>
+    </div>
+  );
+};
 
-  // ✅ Save to localStorage on every field change
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const updated = { ...formData, [name]: value };
-    setFormData(updated);
-    localStorage.setItem('profileData', JSON.stringify(updated));
+const AppContent: React.FC = () => {
+  const navigate = useNavigate();
+  const [profileData, setProfileData] = useState<ProfileData>({
+    fullName: '',
+    email: '',
+    highSchool: '',
+    position: '',
+    gradYear: '',
+    cityState: '',
+    heightFt: '',
+    heightIn: '',
+    weight: '',
+    fortyYardDash: '',
+    benchPress: '',
+  });
+
+  const handleProfileChange = (data: Partial<ProfileData>) => {
+    setProfileData(prev => ({ ...prev, ...data }));
+  };
+
+  const handleAuthSuccess = () => {
+    console.log("Authentication success callback triggered, redirecting to home page...");
+    navigate('/');
   };
 
   return (
-    // Removed Layout component for simplification
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Athlete Profile</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Form Column */}
-        <div>
-          <ProfileInfoForm formData={formData} onFormChange={handleInputChange} />
-        </div>
-        {/* Preview Column */}
-        <div>
-          {/* Passing formData directly to preview */}
-          <ProfilePreview profile={formData} /> 
-        </div>
-      </div>
-    </div>
+    <Layout>
+      <Routes>
+        <Route 
+          path="/login" 
+          element={
+            <PublicRoute>
+              <Login onSuccess={handleAuthSuccess} />
+            </PublicRoute>
+          } 
+        />
+        
+        <Route 
+          path="/register" 
+          element={
+            <PublicRoute>
+              <Register onSuccess={handleAuthSuccess} />
+            </PublicRoute>
+          } 
+        />
+        
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="md:w-1/2">
+                  <ProfileInfoForm
+                    profileData={profileData}
+                    onChange={handleProfileChange}
+                  />
+                </div>
+                <div className="md:w-1/2">
+                  <ProfilePreview profileData={profileData} />
+                </div>
+              </div>
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Redirect /home to / */}
+        <Route path="/home" element={<Navigate to="/" replace />} />
+        
+        {/* Catch all route for 404 */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Layout>
   );
-}
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </AuthProvider>
+  );
+};
 
 export default App;

@@ -4,6 +4,8 @@ import { db } from './db/client';
 import { profiles } from './db/schema';
 import profileRouter from './routes/profile';
 import debugRouter from './routes/debug';
+import authRouter from './routes/auth';
+import testAuthRouter from './routes/test-auth';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +31,8 @@ app.use(express.json());
 // Routes
 app.use('/api/profile', profileRouter);
 app.use('/api/debug', debugRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/test-auth', testAuthRouter);
 
 // Test route to directly insert a profile for testing
 app.get('/test-insert', async (req, res) => {
@@ -44,7 +48,8 @@ app.get('/test-insert', async (req, res) => {
       heightIn: "0",
       weight: "180",
       fortyYardDash: "4.5",
-      benchPress: "200"
+      benchPress: "200",
+      userId: 1 // Associate with the first user in the database
     };
     
     console.log("Attempting to insert test profile:", testProfile);
