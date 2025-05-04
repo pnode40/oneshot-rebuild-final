@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { z } from 'zod';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -102,7 +102,7 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
       }
 
       // Send data to the server
-      const response = await axios.post('/api/profile', validatedData, {
+      await axios.post('/api/profile', validatedData, {
         headers: {
           Authorization: `Bearer ${token}`
         }

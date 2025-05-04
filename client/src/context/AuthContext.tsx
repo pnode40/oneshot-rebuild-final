@@ -1,44 +1,7 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { isAuthenticated, getToken, login as apiLogin, logout as apiLogout, register as apiRegister } from '../services/api';
-
-// User type definition
-export interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: 'athlete' | 'recruiter' | 'admin' | 'parent';
-  isVerified: boolean;
-}
-
-// Auth context type definition
-interface AuthContextType {
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (data: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    role?: 'athlete' | 'recruiter' | 'admin' | 'parent';
-  }) => Promise<boolean>;
-  logout: () => void;
-}
-
-// Create context with default values
-const AuthContext = createContext<AuthContextType>({
-  isLoading: true,
-  isAuthenticated: false,
-  user: null,
-  login: async () => false,
-  register: async () => false,
-  logout: () => {},
-});
-
-// Custom hook to use auth context
-export const useAuth = () => useContext(AuthContext);
+import React, { useState, useEffect, ReactNode } from 'react';
+import { isAuthenticated, login as apiLogin, logout as apiLogout, register as apiRegister } from '../services/api';
+import { AuthContext } from './AuthContext.context';
+import { User } from './types';
 
 // Provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import ProfileInfoForm from './components/ProfileInfoForm';
 import ProfilePreview from './components/ProfilePreview';
 import Login from './components/Login';
 import Register from './components/Register';
 import Layout from './components/Layout';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './context/useAuth';
 import './App.css';
 
 // Define the shape of the profile data

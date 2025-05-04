@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 interface RegisterProps {
   onSuccess?: () => void;
@@ -50,7 +50,13 @@ const Register: React.FC<RegisterProps> = ({ onSuccess }) => {
     });
     
     try {
-      const { confirmPassword, ...userData } = formData;
+      const userData = {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: formData.role
+      };
       console.log("Calling authContext.register...");
       const success = await register(userData);
       console.log("Register function returned:", success);

@@ -164,7 +164,7 @@ export async function createProfile(profile: {
     try {
       const data = await responseClone.json();
       console.log('API response data:', data);
-    } catch (e) {
+    } catch {
       console.log('Could not parse response as JSON');
     }
     
