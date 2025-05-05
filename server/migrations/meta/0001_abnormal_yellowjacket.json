@@ -1,0 +1,39 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "id": "0001_abnormal_yellowjacket",
+  "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+  "operations": [
+    {
+      "addTable": {
+        "table": "profiles",
+        "columns": {
+          "id": {
+            "name": "id",
+            "dataType": "serial",
+            "primaryKey": true,
+            "notNull": true
+          },
+          "created_at": {
+            "name": "created_at",
+            "dataType": "timestamp",
+            "notNull": true,
+            "default": "now()"
+          },
+          "user_id": {
+            "name": "user_id",
+            "dataType": "integer",
+            "notNull": true,
+            "foreignKeys": [
+              {
+                "tableId": "users",
+                "columnId": "id",
+                "onDelete": "cascade"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

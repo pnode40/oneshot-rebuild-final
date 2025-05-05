@@ -1,19 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { createProfile } from '../services/api';
-
-export interface ProfileData {
-  fullName: string;
-  email: string;
-  highSchool: string;
-  position: string;
-  gradYear: string;
-  cityState: string;
-  heightFt: string;
-  heightIn: string;
-  weight: string;
-  fortyYardDash: string;
-  benchPress: string;
-}
+import { ProfileData } from '../App';
 
 // Define the profile type returned from the API
 interface Profile extends ProfileData {
@@ -22,33 +9,38 @@ interface Profile extends ProfileData {
 }
 
 interface Props {
-  formData: ProfileData;
-  onFormChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  profileData: ProfileData;
+  onChange: (data: Partial<ProfileData>) => void;
 }
 
-const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
+const ProfileInfoForm: React.FC<Props> = ({ profileData, onChange }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savedProfile, setSavedProfile] = useState<Profile | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>('');
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    onChange({ [name]: value });
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     const requiredFields = ['fullName', 'email', 'highSchool', 'position'];
     requiredFields.forEach((field) => {
-      if (!formData[field as keyof ProfileData]?.trim()) {
+      if (!profileData[field as keyof ProfileData]?.trim()) {
         newErrors[field] = `${field} is required`;
       }
     });
 
-    if (formData.email && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)) {
+    if (profileData.email && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(profileData.email)) {
       newErrors.email = 'Enter a valid email address';
     }
 
     const numberFields = ['heightFt', 'heightIn', 'weight', 'fortyYardDash', 'benchPress'];
     numberFields.forEach((field) => {
-      const value = formData[field as keyof ProfileData];
+      const value = profileData[field as keyof ProfileData];
       if (value && isNaN(Number(value))) {
         newErrors[field] = 'Must be a number';
       }
@@ -91,8 +83,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
         setIsSubmitting(true);
         setDebugInfo('Submitting profile...');
         
-        console.log('Submitting profile data:', formData);
-        const response = await createProfile(formData);
+        console.log('Submitting profile data:', profileData);
+        const response = await createProfile(profileData);
         
         console.log('Response received:', response.status);
         
@@ -129,8 +121,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
           <input
             type="text"
             name="fullName"
-            value={formData.fullName}
-            onChange={onFormChange}
+            value={profileData.fullName}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
           {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
@@ -141,8 +133,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
           <input
             type="email"
             name="email"
-            value={formData.email}
-            onChange={onFormChange}
+            value={profileData.email}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -153,8 +145,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
           <input
             type="text"
             name="highSchool"
-            value={formData.highSchool}
-            onChange={onFormChange}
+            value={profileData.highSchool}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
           {errors.highSchool && <p className="text-red-500 text-xs mt-1">{errors.highSchool}</p>}
@@ -165,8 +157,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
           <input
             type="text"
             name="position"
-            value={formData.position}
-            onChange={onFormChange}
+            value={profileData.position}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
           {errors.position && <p className="text-red-500 text-xs mt-1">{errors.position}</p>}
@@ -177,8 +169,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
           <input
             type="text"
             name="gradYear"
-            value={formData.gradYear}
-            onChange={onFormChange}
+            value={profileData.gradYear}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
         </div>
@@ -188,8 +180,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
           <input
             type="text"
             name="cityState"
-            value={formData.cityState}
-            onChange={onFormChange}
+            value={profileData.cityState}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
         </div>
@@ -202,16 +194,16 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
               type="text"
               name="heightFt"
               placeholder="Feet"
-              value={formData.heightFt}
-              onChange={onFormChange}
+              value={profileData.heightFt}
+              onChange={handleChange}
               className="mt-1 block w-1/2 p-2 border border-gray-300 rounded-md"
             />
             <input
               type="text"
               name="heightIn"
               placeholder="Inches"
-              value={formData.heightIn}
-              onChange={onFormChange}
+              value={profileData.heightIn}
+              onChange={handleChange}
               className="mt-1 block w-1/2 p-2 border border-gray-300 rounded-md"
             />
           </div>
@@ -228,8 +220,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
           <input
             type="text"
             name="weight"
-            value={formData.weight}
-            onChange={onFormChange}
+            value={profileData.weight}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
           {errors.weight && <p className="text-red-500 text-xs mt-1">{errors.weight}</p>}
@@ -240,8 +232,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
           <input
             type="text"
             name="fortyYardDash"
-            value={formData.fortyYardDash}
-            onChange={onFormChange}
+            value={profileData.fortyYardDash}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
           {errors.fortyYardDash && <p className="text-red-500 text-xs mt-1">{errors.fortyYardDash}</p>}
@@ -252,8 +244,8 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
           <input
             type="text"
             name="benchPress"
-            value={formData.benchPress}
-            onChange={onFormChange}
+            value={profileData.benchPress}
+            onChange={handleChange}
             className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
           />
           {errors.benchPress && <p className="text-red-500 text-xs mt-1">{errors.benchPress}</p>}
@@ -267,7 +259,7 @@ const ProfileInfoForm: React.FC<Props> = ({ formData, onFormChange }) => {
               type="button" 
               className="px-2 py-1 bg-gray-200 rounded text-xs"
               onClick={() => {
-                console.log('Form Data:', formData);
+                console.log('Form Data:', profileData);
                 setDebugInfo('Form data logged to console');
               }}
             >

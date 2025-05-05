@@ -1,70 +1,74 @@
+/**
+ * Drizzle ORM Standard Migration System
+ * 
+ * This file provides a clean implementation of the standard Drizzle migration process.
+ * It deliberately avoids automatic fixes or complex diagnostics to maintain predictability.
+ * 
+ * If migration failures occur due to table structure or inconsistencies:
+ * - Run `npm run migrate:validate` to diagnose issues
+ * - Run `npm run migrate:rebuild` to rebuild the migration tracking table
+ * 
+ * Usage:
+ * - For normal operation: npm run migrate
+ * - To validate migration state: npm run migrate:validate
+ * - To rebuild migration table: npm run migrate:rebuild
+ * - To rebuild and validate: npm run migrate:rebuild-and-validate
+ */
+
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import dotenv from 'dotenv';
-import fs from 'fs';
 import path from 'path';
 
-// Load environment variables
-dotenv.config();
+dotenv.config(); // Load .env file
 
-// Ensure DATABASE_URL is defined
-if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL environment variable is required');
-  process.exit(1);
-}
+/**
+ * Standard Drizzle migration function
+ */
+async function runStandardMigrations() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    console.error('🔴 DATABASE_URL environment variable is required');
+    process.exit(1);
+  }
 
-async function verifyMigrations() {
-  // Create postgres client for migrations
-  const client = postgres(process.env.DATABASE_URL!, { max: 1 });
-  
+  // Create postgres client for the migration
+  const migrationClient = postgres(databaseUrl, {
+     max: 1,
+     ssl: databaseUrl.includes('sslmode=require') ? 'require' : undefined
+  });
+
   try {
-    console.log('Verifying database migration status...');
+    const migrationsFolder = path.resolve(process.cwd(), './migrations');
+    console.log(`🚀 Running Drizzle migrations from ${migrationsFolder}...`);
+    const db = drizzle(migrationClient);
+
+    // Run the standard Drizzle migration
+    await migrate(db, { migrationsFolder, migrationsTable: 'drizzle.__drizzle_migrations' });
+    console.log('✅ Migration process completed successfully.');
+  } catch (error: any) {
+    console.error('❌ Migration error:', error);
     
-    // Get list of SQL migration files (excluding backups)
-    const migrationsDir = path.resolve(process.cwd(), './migrations');
-    const migrationFiles = fs.readdirSync(migrationsDir)
-      .filter(file => file.endsWith('.sql') && !file.endsWith('.bak'))
-      .map(file => file.replace('.sql', ''))
-      .sort();
-      
-    console.log(`Found ${migrationFiles.length} migration files:`, migrationFiles);
-    
-    // Check database for tracked migrations
-    const result = await client`
-      SELECT hash FROM drizzle.__drizzle_migrations ORDER BY hash
-    `;
-    
-    const trackedMigrations = result.map(row => row.hash);
-    console.log(`Found ${trackedMigrations.length} tracked migrations in database:`, trackedMigrations);
-    
-    // Check if all migrations are tracked
-    const missingMigrations = migrationFiles.filter(hash => !trackedMigrations.includes(hash));
-    const extraMigrations = trackedMigrations.filter(hash => !migrationFiles.includes(hash));
-    
-    if (missingMigrations.length === 0 && extraMigrations.length === 0) {
-      console.log('✅ All migrations are properly tracked in the database');
-      console.log('The migration system is synchronized');
-    } else {
-      if (missingMigrations.length > 0) {
-        console.log('⚠️ Some migrations are not tracked in the database:', missingMigrations);
-        console.log('Run node mark-migrations-applied.js to mark them as applied');
-      }
-      
-      if (extraMigrations.length > 0) {
-        console.log('⚠️ Some tracked migrations have no corresponding files:', extraMigrations);
-        console.log('Run node clean-migration-tracking.js to clean up the database');
-      }
+    // Provide helpful guidance based on error type
+    if (error.message && error.message.includes('undefined.sql')) {
+      console.error('\n🔍 DIAGNOSIS: This appears to be the "undefined.sql" error in Drizzle ORM.');
+      console.error('This typically occurs when the migration tracking table is out of sync with the actual migrations.');
+      console.error('There may be a type mismatch issue with the created_at column.');
     }
     
-    console.log('Migration verification completed successfully');
-  } catch (error) {
-    console.error('Verification failed:', error);
+    console.error('\n💡 RECOMMENDED STEPS:');
+    console.error('1. Run npm run migrate:validate to diagnose issues');
+    console.error('2. Run npm run migrate:rebuild to fix the migration table structure');
+    console.error('3. Run npm run migrate again after rebuilding the table');
+    console.error('\nFor more information, check the documentation in the migration files.');
+    
     process.exit(1);
   } finally {
-    // Close the database connection
-    await client.end();
-    process.exit(0);
+    console.log('🔌 Closing migration client connection...');
+    await migrationClient.end();
+    console.log('🚪 Migration client connection closed.');
   }
 }
 
-// Run migration verification
-verifyMigrations(); 
+runStandardMigrations();

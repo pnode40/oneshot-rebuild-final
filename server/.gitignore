@@ -1,0 +1,6 @@
+# Claude scratchpad file
+claude/scratchpad.ts
+
+# Environment files
+.env
+.env.local 

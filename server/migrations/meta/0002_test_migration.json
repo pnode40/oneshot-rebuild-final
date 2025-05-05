@@ -1,0 +1,20 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "id": "0002_test_migration",
+  "name": "test_migration",
+  "up": {
+    "steps": [
+      {
+        "sql": "/* Empty test migration */"
+      }
+    ]
+  },
+  "down": {
+    "steps": [
+      {
+        "sql": "/* Empty test migration revert */"
+      }
+    ]
+  }
+} 
