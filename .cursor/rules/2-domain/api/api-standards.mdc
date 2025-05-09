@@ -1,0 +1,102 @@
+---
+description: "API development standards and patterns"
+globs: ["server/api/**", "src/api/**"]
+alwaysApply: false
+---
+
+---
+description: "API implementation standards for OneShot backend"
+globs: ["server/api/**", "routes/**/*.ts"]
+alwaysApply: false
+version: "1.0"
+owner: "OneShot Team"
+---
+
+## Claude Instruction
+
+Before generating any API logic, you must explicitly consult and apply the principles in `@QA-Overlay.md`. Your implementation plan must:
+
+- Explain how you’ll meet error-handling standards
+- Show how Zod validation is applied at each entry point
+- Address testability (e.g., return types, edge case handling)
+- Cite which sections of `@QA-Overlay.md` are being followed
+
+# API Development Standards
+
+## RESTful Endpoint Design
+- Use resource-based URLs (e.g., `/users`, `/posts`)
+- Apply standard HTTP methods appropriately:
+  - GET: Read resources
+  - POST: Create resources
+  - PUT/PATCH: Update resources
+  - DELETE: Remove resources
+- Use plural nouns for collection endpoints
+- Nest related resources (e.g., `/users/{id}/posts`)
+
+## Request Validation
+- Use Zod for all request validation
+- Define schemas for both request body and query parameters
+- Export Zod schemas for reuse in frontend validation
+- Follow this pattern:
+  ```ts
+  // Schema definition
+  export const createUserSchema = z.object({
+    name: z.string().min(2).max(50),
+    email: z.string().email(),
+    role: z.enum(["user", "admin"]).default("user")
+  });
+  
+  // Type derivation
+  export type CreateUserRequest = z.infer<typeof createUserSchema>;
+  
+  // Validation middleware
+  const validateCreateUser = validateRequest(createUserSchema);
+  ```
+
+## Error Handling
+- Use consistent error response format:
+  ```ts
+  {
+    status: "error",
+    code: string, // Application-specific error code
+    message: string, // User-friendly message
+    details?: any // Optional additional details
+  }
+  ```
+- Implement global error handling middleware
+- Map common errors to appropriate HTTP status codes
+- Log detailed errors server-side, return sanitized responses
+
+## Authentication & Authorization
+- Use JWT for authentication
+- Include role-based middleware for authorization
+- Separate auth logic into middleware functions
+- Protect routes using middleware composition
+
+## Versioning
+- Use explicit versioning in URL path (e.g., `/api/v1/users`)
+- Maintain backward compatibility within versions
+- Document breaking changes between versions
+
+## Response Structure
+- Use consistent response envelope:
+  ```ts
+  {
+    status: "success",
+    data: any, // Response payload
+    meta?: { // Optional metadata
+      pagination?: {
+        total: number,
+        page: number,
+        limit: number
+      }
+    }
+  }
+  ```
+- Include appropriate HTTP status codes
+- Support pagination for collection endpoints
+
+## References
+@PATTERN-API
+@LOGIC-Core
+@QA-Overlay

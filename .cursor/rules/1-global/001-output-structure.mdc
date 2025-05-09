@@ -1,0 +1,57 @@
+---
+description: "Enforce consistent output structure with verification steps"
+alwaysApply: true
+version: "1.0"
+owner: "Claude"
+---
+
+# Output Structure Enforcement
+
+## Purpose
+This rule ensures all implementation responses follow a consistent structure that facilitates verification and quality assurance.
+
+## Required Format
+All significant implementation responses must include:
+
+### Solution
+The actual implementation code, explanation, or configuration.
+
+### Verification Steps
+1. Clear, numbered steps to verify the implementation
+2. Each step should have a concrete expected outcome
+3. Steps should be executable by a non-technical verifier
+
+### Standards Applied
+- List of patterns, docs, or rules that were applied
+- Any exceptions or deviations from standards with justification
+
+### Quality Check
+- Performance considerations
+- Security implications
+- Edge cases addressed
+- Known limitations
+
+## References
+@QA-Overlay
+@CHECKLIST-Verification
+
+## Example
+```
+## Solution
+[Implementation details]
+
+## Verification Steps
+1. Navigate to /profile page
+2. Click "Edit Profile" button
+3. Change name field to "Test User"
+4. Verify name updates without page reload
+
+## Standards Applied
+- @PATTERN-API:RESTful
+- @LOGIC-Core:UserValidation
+
+## Quality Check
+- Handles empty input with validation error
+- Secured with proper authentication
+- Edge case: Long names are truncated to 50 chars
+```

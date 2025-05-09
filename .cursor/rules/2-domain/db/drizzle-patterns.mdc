@@ -1,0 +1,109 @@
+---
+description: "Database patterns and standards using Drizzle ORM"
+globs: ["server/db/**", "src/db/**", "**/*.schema.ts"]
+alwaysApply: false
+---
+
+---
+description: "Database schema conventions using Drizzle ORM for OneShot"
+globs: globs: ["db/schema/**/*.ts"]
+alwaysApply: false
+version: "1.0"
+owner: "OneShot Team"
+---
+
+## Claude Instruction
+
+When editing or generating database schema logic using Drizzle ORM, Claude must:
+
+- Confirm that column types, naming conventions, and foreign key relationships match this rule
+- State whether the file includes:
+  - `pgTable` with all `.notNull()` and `.default()` values where appropriate
+  - Primary keys and relationships with `references(...)`
+- Review `@QA-Overlay.md` and `@DECISION-Log.md` before proposing schema changes
+- Cite any constraints, migration impacts, or decisions that might require updates to other rules/docs
+
+# Database Standards with Drizzle ORM
+
+## Schema Definition
+- Define tables in separate schema files by domain
+- Use camelCase for column names, PascalCase for table names
+- Always specify explicit column types
+- Example pattern:
+  ```ts
+  import { pgTable, serial, text, timestamp, boolean } from "drizzle-orm/pg-core";
+  
+  export const Users = pgTable("users", {
+    id: serial("id").primaryKey(),
+    email: text("email").notNull().unique(),
+    name: text("name").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    isActive: boolean("is_active").default(true).notNull()
+  });
+  ```
+
+## Relationships
+- Use consistent naming for foreign keys: `{tableName}Id`
+- Define explicit relations using the relations object
+- Include cascade operations where appropriate
+- Example:
+  ```ts
+  export const Posts = pgTable("posts", {
+    id: serial("id").primaryKey(),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    userId: integer("user_id").references(() => Users.id, { onDelete: "cascade" }).notNull()
+  });
+  
+  export const PostsRelations = relations(Posts, ({ one }) => ({
+    author: one(Users, {
+      fields: [Posts.userId],
+      references: [Users.id]
+    })
+  }));
+  ```
+
+## Migrations
+- Generate migrations using Drizzle Kit
+- Review migrations before applying them
+- Store migrations in a version-controlled directory
+- Include both up and down migrations
+
+## Query Patterns
+- Use Drizzle's type-safe query builder
+- Prefer composable queries over inline SQL
+- Utilize transactions for related operations
+- Example query pattern:
+  ```ts
+  import { eq, and } from "drizzle-orm";
+  
+  // Composable query parts
+  const activeUsersQuery = eq(Users.isActive, true);
+  
+  // Complete query
+  const result = await db
+    .select({
+      id: Users.id,
+      name: Users.name,
+      email: Users.email
+    })
+    .from(Users)
+    .where(and(
+      activeUsersQuery,
+      eq(Users.email, email)
+    ))
+    .execute();
+  ```
+
+## Resource Management
+- Use connection pooling for database connections
+- Close connections properly after use
+- Handle connection errors gracefully
+- Implement retry logic for transient failures
+
+## References
+@PATTERN-Database
+@LOGIC-Core
+@DECISION-Log.md
+@QA-Overlay.md

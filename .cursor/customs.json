@@ -1,0 +1,10 @@
+{
+  "customs": [
+    {
+      "name": "OneShot Bootstrap",
+      "description": "Initialize Claude with full OneShot project memory + QA rules.",
+      "prompt": "@README-for-AI\n@META-Index\n@CHECKLIST-Verification\n@PROGRESS-Tracker\n\nWe're starting a new task. Please apply all documented rules and retrieve relevant patterns, business logic, and terminology from our project memory system.\n\nInclude:\n- Code with Claude's best practices\n- Manual verification steps for Eric\n- Test scripts or error handling when applicable",
+      "shortcut": "Cmd+Shift+O"
+    }
+  ]
+}

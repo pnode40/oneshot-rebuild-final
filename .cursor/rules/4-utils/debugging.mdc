@@ -1,0 +1,88 @@
+---
+description: "Debugging and troubleshooting utilities and patterns"
+alwaysApply: false
+version: "1.0"
+owner: "Claude"
+---
+
+# Debugging and Troubleshooting
+
+## Purpose
+This rule provides guidance on debugging approaches, testing strategies, and troubleshooting techniques.
+
+## Debugging Principles
+- Start with the most specific/recent changes
+- Isolate components to test independently
+- Use structured logging with clear contexts
+- Verify assumptions with explicit tests
+- Work from symptoms to causes systematically
+
+## Logging Best Practices
+- Use consistent log levels (error, warn, info, debug)
+- Include context with each log (user, session, component)
+- Format objects and errors for readability
+- Implement structured logging for easier parsing
+- Example:
+  ```ts
+  logger.info("User action completed", {
+    userId: user.id,
+    action: "profile_update",
+    changedFields: ["name", "email"],
+    duration: performance.now() - startTime
+  });
+  ```
+
+## Error Handling Patterns
+- Implement try/catch blocks around async operations
+- Use custom error classes for domain-specific errors
+- Include stack traces and context in error objects
+- Centralize error handling when possible
+- Example:
+  ```ts
+  try {
+    await updateUserProfile(userId, updates);
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      // Handle validation error
+      logger.warn("Validation failed", { userId, fields: error.fields });
+      return res.status(400).json({ 
+        status: "error", 
+        code: "VALIDATION_ERROR",
+        message: "Invalid input data",
+        details: error.fields 
+      });
+    }
+    
+    // Generic error handler
+    logger.error("Failed to update profile", { userId, error });
+    return res.status(500).json({ 
+      status: "error", 
+      code: "SERVER_ERROR",
+      message: "Failed to update profile" 
+    });
+  }
+  ```
+
+## Testing Approaches
+- Write isolated unit tests for functions and components
+- Implement integration tests for API endpoints
+- Create end-to-end tests for critical user flows
+- Use mocks and stubs to isolate system under test
+- Structure tests with arrange-act-assert pattern
+
+## Verification Steps
+- Include clear verification steps in all implementations
+- Test happy path and at least one error path
+- Verify both client-side and server-side behavior
+- Check browser console for errors and warnings
+- Validate actual database changes
+
+## Common Troubleshooting Patterns
+- Frontend: Check browser console, network requests, React DevTools
+- Backend: Verify database queries, middleware execution, API responses
+- Database: Validate schema, check query plans, inspect indexes
+- Authentication: Verify tokens, check permissions, inspect headers
+
+## References
+@PROCESS-RecoveryProtocol
+@PROMPT-Review-Checklist

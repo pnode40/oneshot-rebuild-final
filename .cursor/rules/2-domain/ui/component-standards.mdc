@@ -1,0 +1,129 @@
+---
+description: "UI component standards and patterns with React and Tailwind"
+globs: ["src/components/**", "**/*.tsx", "**/*.jsx"]
+alwaysApply: false
+---
+
+---
+description: "UI component standards for React + Tailwind in the OneShot frontend"
+globs: ["src/components/**", "src/features/**/*.tsx"]
+alwaysApply: false
+version: "1.0"
+owner: "OneShot Team"
+---
+
+## Claude Instruction
+
+Before generating any React component code, Claude must:
+
+- Review `@QA-Overlay-UI.md` in full
+- Confirm that:
+  - Responsive design is respected
+  - Testability is included (data-testid or example cases)
+  - Accessibility has been considered
+- State how these criteria are being met in the plan
+
+# UI Component Standards
+
+## Component Structure
+- Use functional components with hooks
+- Define props interface/type at the top of the file
+- Follow this general structure:
+  ```tsx
+  import { useState } from 'react';
+  
+  interface ButtonProps {
+    label: string;
+    onClick?: () => void;
+    variant?: 'primary' | 'secondary' | 'danger';
+    disabled?: boolean;
+  }
+  
+  export const Button = ({ 
+    label, 
+    onClick, 
+    variant = 'primary', 
+    disabled = false 
+  }: ButtonProps) => {
+    // Component logic
+    
+    return (
+      <button 
+        className={`btn btn-${variant}`} 
+        onClick={onClick}
+        disabled={disabled}
+      >
+        {label}
+      </button>
+    );
+  };
+  ```
+
+## Styling with Tailwind
+- Use Tailwind classes directly in JSX
+- Create consistent class patterns for common elements
+- Extract complex class combinations into components
+- For dynamic classes, use conditional expressions:
+  ```tsx
+  <div className={`
+    rounded-md p-4 
+    ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'}
+  `}>
+    {children}
+  </div>
+  ```
+
+## State Management
+- Use local state for component-specific data
+- Lift state up to common ancestor for shared state
+- Use Context API for global application state
+- Follow this pattern for controlled inputs:
+  ```tsx
+  const [value, setValue] = useState('');
+  
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      className="input"
+    />
+  );
+  ```
+
+## Component Composition
+- Break complex components into smaller, reusable parts
+- Use composition over inheritance
+- Pass children props for flexible component content
+- Example:
+  ```tsx
+  export const Card = ({ title, children }) => (
+    <div className="rounded-lg shadow-md p-4">
+      {title && <h3 className="text-xl font-bold mb-2">{title}</h3>}
+      <div>{children}</div>
+    </div>
+  );
+  ```
+
+## Form Handling
+- Use controlled form elements
+- Implement client-side validation with error messages
+- Group related form fields into form components
+- Handle form submission with explicit handlers
+
+## Accessibility
+- Use semantic HTML elements
+- Include ARIA attributes where necessary
+- Ensure keyboard navigation works
+- Support screen readers with appropriate alt text
+- Maintain sufficient color contrast
+
+## Performance Considerations
+- Memoize expensive calculations with useMemo
+- Prevent unnecessary re-renders with React.memo
+- Use useCallback for functions passed as props
+- Implement lazy loading for large components or routes
+
+## References
+@PATTERN-Components
+@STYLE-Frontend
