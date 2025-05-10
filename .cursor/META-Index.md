@@ -15,12 +15,20 @@ This index lists all project-wide Cursor Docs used for long-term memory and AI c
 - `@PATTERN-API` – REST conventions, auth handling, error formats
 - `@PATTERN-Database` – Drizzle patterns, FK handling, enums, numeric types
 - `@PATTERN-Components` – Reusable UI patterns: cards, buttons, layouts
+- `@PATTERN-JWTAuthentication` – JWT token generation, validation, and usage patterns
+- `@PATTERN-SecurePasswordManagement` – Secure password hashing and verification
+- `@PATTERN-ReactAuthContext` – Authentication state management in React
+- `@PATTERN-ZodRequestValidation` – Request validation using Zod schemas
 
 ## 🔤 Language & Vocabulary
 - `@TERM-Glossary` – Definitions of domain-specific terms
 
 ## 📦 MVP & Milestones
 - `@MVP-May21` – Full MVP deliverables for May 21, 2025 milestone
+
+## 💼 Features
+- `@FEATURE-AuthFlow` – Authentication system including registration, login, and JWT handling
+- `@FEATURE-ProfileFlow` – User profile creation and management
 
 ## 🚫 Meta & QA
 - `@META-AntiPatterns` – Common doc problems to avoid
@@ -30,7 +38,7 @@ This index lists all project-wide Cursor Docs used for long-term memory and AI c
 ---
 
 **Usage Example:**  
-“When generating the athlete profile API route, follow `@MVP-May21`, apply `@PATTERN-API`, and validate against `@LOGIC-Core`.”
+"When generating the athlete profile API route, follow `@MVP-May21`, apply `@PATTERN-API`, and validate against `@LOGIC-Core`."
 
 > Keep this index updated when new docs are created or existing ones versioned.
 > Use this as a jumping-off point at the start of any major coding task.
