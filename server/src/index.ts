@@ -1,11 +1,14 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { db } from './db/client';
-import { profiles } from './db/schema';
+import { profiles, positionEnum, athleteRoleEnum } from './db/schema';
 import profileRouter from './routes/profile';
 import debugRouter from './routes/debug';
 import authRouter from './routes/auth';
 import testAuthRouter from './routes/test-auth';
+import uploadRouter from './routes/upload';
+import { sql } from 'drizzle-orm';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,28 +31,43 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+// Serve static files from public directory
+app.use(express.static(path.join(process.cwd(), 'public')));
+
 // Routes
 app.use('/api/profile', profileRouter);
 app.use('/api/debug', debugRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/test-auth', testAuthRouter);
+app.use('/api/upload', uploadRouter);
 
 // Test route to directly insert a profile for testing
 app.get('/test-insert', async (req, res) => {
   try {
+    // Create a test profile with data that matches the schema
     const testProfile = {
-      fullName: "Test User",
-      email: "test@example.com",
-      highSchool: "Test High",
-      position: "Tester",
-      gradYear: "2025",
-      cityState: "Test City, TX",
-      heightFt: "6",
-      heightIn: "0",
-      weight: "180",
-      fortyYardDash: "4.5",
-      benchPress: "200",
-      userId: 1 // Associate with the first user in the database
+      userId: 1, // Associate with the first user in the database
+      positionPrimary: 'QB' as const, // Use literal string that matches the enum
+      athleteRole: athleteRoleEnum.enumValues[0], // Use 'high_school' from the enum values
+      
+      // Optional fields that are properly typed
+      highSchoolName: "Test High School",
+      graduationYear: sql`${2025}`, // Use SQL literal for numeric field
+      heightInInches: sql`${72}`, // 6'0" in inches
+      weightLbs: sql`${180}`, // Weight in lbs
+      
+      // Using the schema's field names instead of client-side names
+      customUrlSlug: "test-user-profile",
+      
+      // Setting default visibility flags
+      isHeightVisible: true,
+      isWeightVisible: true,
+      isGpaVisible: true,
+      isTranscriptVisible: true,
+      isNcaaInfoVisible: true
     };
     
     console.log("Attempting to insert test profile:", testProfile);
@@ -90,5 +108,6 @@ async function testConnection() {
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`File upload test page available at: http://localhost:${PORT}/upload-test.html`);
   testConnection();
 });

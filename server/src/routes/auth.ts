@@ -4,12 +4,26 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { db } from '../db/client';
 import { users } from '../db/schema';
+import rateLimit from 'express-rate-limit';
 
 const router = Router();
 
 // JWT Secret - in production, this should be in an environment variable
 const JWT_SECRET = process.env.JWT_SECRET || 'oneshot_dev_secret_key';
 const SALT_ROUNDS = 10;
+
+// Rate limiter for login attempts - 5 attempts per IP in 15 minutes
+const loginRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes in milliseconds
+  max: 5, // 5 attempts per window
+  standardHeaders: true, // Return rate limit info in RateLimit-* headers
+  legacyHeaders: false, // Disable X-RateLimit-* headers
+  message: {
+    success: false,
+    message: "Too many login attempts from this IP, please try again after 15 minutes."
+  },
+  statusCode: 429, // Too Many Requests
+});
 
 // Validation schema for user registration
 const registerSchema = z.object({
@@ -212,6 +226,7 @@ async function loginUser(req: Request, res: Response) {
 router.post('/register', registerUser);
 
 // POST /api/auth/login - Login an existing user
-router.post('/login', loginUser);
+// Apply rate limiter to login route only
+router.post('/login', loginRateLimiter, loginUser);
 
 export default router; 

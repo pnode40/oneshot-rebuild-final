@@ -28,9 +28,10 @@ const storage = multer.diskStorage({
       cb(new Error('Invalid file field'), '');
     }
   },
-  filename: (req: AuthRequest, file: Express.Multer.File, cb) => {
+  filename: (req: Request, file: Express.Multer.File, cb) => {
     // Generate unique filename with timestamp and user ID
-    const userId = req.user?.userId || 'unknown';
+    const authReq = req as unknown as AuthRequest;
+    const userId = authReq.user?.userId || 'unknown';
     const timestamp = Date.now();
     const fileExtension = path.extname(file.originalname);
     const sanitizedFilename = `${userId}_${timestamp}${fileExtension}`;

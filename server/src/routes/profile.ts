@@ -246,22 +246,17 @@ async function createProfile(req: AuthRequest, res: Response) {
       const result = await db.insert(profiles)
         .values({
           // Text fields
-          fullName: validatedData.fullName,
-          email: validatedData.email,
-          highSchool: validatedData.highSchool,
-          position: validatedData.position,
-          gradYear: validatedData.gradYear,
-          cityState: validatedData.cityState,
-          heightFt: validatedData.heightFt,
-          heightIn: validatedData.heightIn,
-          weight: validatedData.weight,
-          fortyYardDash: validatedData.fortyYardDash,
-          benchPress: validatedData.benchPress,
           userId: req.user.userId,
-          jerseyNumber: validatedData.jerseyNumber,
-          athleteRole: validatedData.athleteRole,
           customUrlSlug,
-          highSchoolName: validatedData.highSchoolName,
+          
+          // Map client field names to schema field names where needed
+          highSchoolName: validatedData.highSchool || validatedData.highSchoolName,
+          
+          // Enum fields - use proper enum types
+          positionPrimary: validatedData.position as any, // Cast to enum type
+          athleteRole: athleteRoleEnum.enumValues.includes(validatedData.athleteRole) 
+            ? validatedData.athleteRole 
+            : athleteRoleEnum.enumValues[0],
           
           // For numeric fields, we use sql`${...}` to properly handle the type conversion
           // between JavaScript numbers and PostgreSQL numeric types
@@ -271,15 +266,24 @@ async function createProfile(req: AuthRequest, res: Response) {
           gpa: validatedData.gpa !== null 
             ? sql`${validatedData.gpa}` 
             : null,
+          heightInInches: validatedData.heightFt && validatedData.heightIn 
+            ? sql`${(parseInt(validatedData.heightFt, 10) * 12) + parseInt(validatedData.heightIn, 10)}` 
+            : null,
+          weightLbs: validatedData.weight 
+            ? sql`${parseInt(validatedData.weight, 10)}` 
+            : null,
+          jerseyNumber: validatedData.jerseyNumber 
+            ? sql`${parseInt(validatedData.jerseyNumber, 10)}` 
+            : null,
           
           // Text URL fields
           profilePhotoUrl: validatedData.profilePhotoUrl,
-          transcriptUrl: validatedData.transcriptUrl,
-          highlightVideoUrl: validatedData.highlightVideoUrl,
+          transcriptPdfUrl: validatedData.transcriptUrl,
+          highlightVideoUrlPrimary: validatedData.highlightVideoUrl,
           
-          // Mixed fields
+          // NCAA fields
           ncaaId: validatedData.ncaaId,
-          eligibilityYearsRemaining: validatedData.eligibilityYearsRemaining !== null 
+          yearsOfEligibility: validatedData.eligibilityYearsRemaining !== null 
             ? sql`${validatedData.eligibilityYearsRemaining}` 
             : null,
           transferPortalEntryDate,
@@ -330,25 +334,41 @@ function createProfileUpdateObject(
   
   // Only include fields that have changed
   if (validatedData.fullName !== undefined) updateValues.fullName = validatedData.fullName;
-  if (validatedData.email !== undefined) updateValues.email = validatedData.email;
-  if (validatedData.highSchool !== undefined) updateValues.highSchool = validatedData.highSchool;
-  if (validatedData.position !== undefined) updateValues.position = validatedData.position;
-  if (validatedData.gradYear !== undefined) updateValues.gradYear = validatedData.gradYear;
-  if (validatedData.cityState !== undefined) updateValues.cityState = validatedData.cityState;
-  if (validatedData.heightFt !== undefined) updateValues.heightFt = validatedData.heightFt;
-  if (validatedData.heightIn !== undefined) updateValues.heightIn = validatedData.heightIn;
-  if (validatedData.weight !== undefined) updateValues.weight = validatedData.weight;
-  if (validatedData.fortyYardDash !== undefined) updateValues.fortyYardDash = validatedData.fortyYardDash;
-  if (validatedData.benchPress !== undefined) updateValues.benchPress = validatedData.benchPress;
+  if (validatedData.highSchool !== undefined) updateValues.highSchoolName = validatedData.highSchool;
+  if (validatedData.position !== undefined) updateValues.positionPrimary = validatedData.position as any;
   
-  if (validatedData.jerseyNumber !== undefined) updateValues.jerseyNumber = validatedData.jerseyNumber;
-  if (validatedData.athleteRole !== undefined) updateValues.athleteRole = validatedData.athleteRole;
+  // Handle computed fields and schema transformation
+  if (validatedData.heightFt !== undefined || validatedData.heightIn !== undefined) {
+    const feet = validatedData.heightFt !== undefined ? parseInt(validatedData.heightFt, 10) : parseInt(existingProfile.heightFt || '0', 10);
+    const inches = validatedData.heightIn !== undefined ? parseInt(validatedData.heightIn, 10) : parseInt(existingProfile.heightIn || '0', 10);
+    const totalInches = (feet * 12) + inches;
+    if (totalInches > 0) {
+      updateValues.heightInInches = sql`${totalInches}`;
+    }
+  }
+  
+  if (validatedData.weight !== undefined) {
+    updateValues.weightLbs = validatedData.weight ? sql`${parseInt(validatedData.weight, 10)}` : null;
+  }
+  
+  if (validatedData.jerseyNumber !== undefined) {
+    updateValues.jerseyNumber = validatedData.jerseyNumber ? 
+      sql`${parseInt(validatedData.jerseyNumber, 10)}` : 
+      null;
+  }
+  
+  if (validatedData.athleteRole !== undefined) {
+    updateValues.athleteRole = athleteRoleEnum.enumValues.includes(validatedData.athleteRole) 
+      ? validatedData.athleteRole 
+      : athleteRoleEnum.enumValues[0];
+  }
+  
   if (customUrlSlug !== null && customUrlSlug !== existingProfile.customUrlSlug) {
     updateValues.customUrlSlug = customUrlSlug;
   }
-  if (validatedData.highSchoolName !== undefined) updateValues.highSchoolName = validatedData.highSchoolName;
   
-  // Numeric fields - convert to strings for Drizzle ORM
+  // Numeric fields using sql`${...}` to handle type conversions between
+  // JavaScript numbers and PostgreSQL numeric types
   if (validatedData.graduationYear !== undefined) {
     updateValues.graduationYear = validatedData.graduationYear !== null 
       ? sql`${validatedData.graduationYear}` 
@@ -362,13 +382,13 @@ function createProfileUpdateObject(
   }
   
   if (validatedData.profilePhotoUrl !== undefined) updateValues.profilePhotoUrl = validatedData.profilePhotoUrl;
-  if (validatedData.transcriptUrl !== undefined) updateValues.transcriptUrl = validatedData.transcriptUrl;
-  if (validatedData.highlightVideoUrl !== undefined) updateValues.highlightVideoUrl = validatedData.highlightVideoUrl;
+  if (validatedData.transcriptUrl !== undefined) updateValues.transcriptPdfUrl = validatedData.transcriptUrl;
+  if (validatedData.highlightVideoUrl !== undefined) updateValues.highlightVideoUrlPrimary = validatedData.highlightVideoUrl;
   
   if (validatedData.ncaaId !== undefined) updateValues.ncaaId = validatedData.ncaaId;
   
   if (validatedData.eligibilityYearsRemaining !== undefined) {
-    updateValues.eligibilityYearsRemaining = validatedData.eligibilityYearsRemaining !== null
+    updateValues.yearsOfEligibility = validatedData.eligibilityYearsRemaining !== null
       ? sql`${validatedData.eligibilityYearsRemaining}`
       : null;
   }
@@ -446,9 +466,9 @@ async function updateProfile(req: AuthRequest, res: Response) {
       
       if (validatedData.customUrlSlug !== undefined) {
         if (validatedData.customUrlSlug === '') {
-          // Generate from name if empty string provided
+          // Generate from name if empty string provided - use highSchoolName instead of fullName
           customUrlSlug = await generateUniqueSlug(
-            validatedData.fullName || existingProfile.fullName, 
+            validatedData.fullName || existingProfile.highSchoolName || "athlete", 
             existingProfile.id
           );
         } else {
@@ -469,25 +489,47 @@ async function updateProfile(req: AuthRequest, res: Response) {
       // NOTE: Using Record<string, any> is necessary here due to Drizzle's type system requirements
       const updateValues: Record<string, any> = {};
       
-      // Text and other basic fields
-      if (validatedData.fullName !== undefined) updateValues.fullName = validatedData.fullName;
-      if (validatedData.email !== undefined) updateValues.email = validatedData.email;
-      if (validatedData.highSchool !== undefined) updateValues.highSchool = validatedData.highSchool;
-      if (validatedData.position !== undefined) updateValues.position = validatedData.position;
-      if (validatedData.gradYear !== undefined) updateValues.gradYear = validatedData.gradYear;
-      if (validatedData.cityState !== undefined) updateValues.cityState = validatedData.cityState;
-      if (validatedData.heightFt !== undefined) updateValues.heightFt = validatedData.heightFt;
-      if (validatedData.heightIn !== undefined) updateValues.heightIn = validatedData.heightIn;
-      if (validatedData.weight !== undefined) updateValues.weight = validatedData.weight;
-      if (validatedData.fortyYardDash !== undefined) updateValues.fortyYardDash = validatedData.fortyYardDash;
-      if (validatedData.benchPress !== undefined) updateValues.benchPress = validatedData.benchPress;
+      // Map client-side field names to database field names
+      if (validatedData.fullName !== undefined) updateValues.highSchoolName = validatedData.fullName;
+      if (validatedData.highSchool !== undefined) updateValues.highSchoolName = validatedData.highSchool;
+      if (validatedData.position !== undefined) updateValues.positionPrimary = validatedData.position as any;
       
-      if (validatedData.jerseyNumber !== undefined) updateValues.jerseyNumber = validatedData.jerseyNumber;
-      if (validatedData.athleteRole !== undefined) updateValues.athleteRole = validatedData.athleteRole;
+      // Handle computed fields and schema transformation
+      if (validatedData.heightFt !== undefined || validatedData.heightIn !== undefined) {
+        // Get existing height components or default to 0
+        // We need to calculate from heightInInches or use defaults
+        const existingInches = existingProfile.heightInInches || 0;
+        const existingFt = Math.floor(existingInches / 12);
+        const existingIn = existingInches % 12;
+        
+        const feet = validatedData.heightFt !== undefined ? parseInt(validatedData.heightFt, 10) : existingFt;
+        const inches = validatedData.heightIn !== undefined ? parseInt(validatedData.heightIn, 10) : existingIn;
+        const totalInches = (feet * 12) + inches;
+        
+        if (totalInches > 0) {
+          updateValues.heightInInches = sql`${totalInches}`;
+        }
+      }
+      
+      if (validatedData.weight !== undefined) {
+        updateValues.weightLbs = validatedData.weight ? sql`${parseInt(validatedData.weight, 10)}` : null;
+      }
+      
+      if (validatedData.jerseyNumber !== undefined) {
+        updateValues.jerseyNumber = validatedData.jerseyNumber ? 
+          sql`${parseInt(validatedData.jerseyNumber, 10)}` : 
+          null;
+      }
+      
+      if (validatedData.athleteRole !== undefined) {
+        updateValues.athleteRole = athleteRoleEnum.enumValues.includes(validatedData.athleteRole) 
+          ? validatedData.athleteRole 
+          : athleteRoleEnum.enumValues[0];
+      }
+      
       if (customUrlSlug !== null && customUrlSlug !== existingProfile.customUrlSlug) {
         updateValues.customUrlSlug = customUrlSlug;
       }
-      if (validatedData.highSchoolName !== undefined) updateValues.highSchoolName = validatedData.highSchoolName;
       
       // Numeric fields using sql`${...}` to handle type conversions between
       // JavaScript numbers and PostgreSQL numeric types
@@ -504,13 +546,13 @@ async function updateProfile(req: AuthRequest, res: Response) {
       }
       
       if (validatedData.profilePhotoUrl !== undefined) updateValues.profilePhotoUrl = validatedData.profilePhotoUrl;
-      if (validatedData.transcriptUrl !== undefined) updateValues.transcriptUrl = validatedData.transcriptUrl;
-      if (validatedData.highlightVideoUrl !== undefined) updateValues.highlightVideoUrl = validatedData.highlightVideoUrl;
+      if (validatedData.transcriptUrl !== undefined) updateValues.transcriptPdfUrl = validatedData.transcriptUrl;
+      if (validatedData.highlightVideoUrl !== undefined) updateValues.highlightVideoUrlPrimary = validatedData.highlightVideoUrl;
       
       if (validatedData.ncaaId !== undefined) updateValues.ncaaId = validatedData.ncaaId;
       
       if (validatedData.eligibilityYearsRemaining !== undefined) {
-        updateValues.eligibilityYearsRemaining = validatedData.eligibilityYearsRemaining !== null
+        updateValues.yearsOfEligibility = validatedData.eligibilityYearsRemaining !== null
           ? sql`${validatedData.eligibilityYearsRemaining}`
           : null;
       }
@@ -604,41 +646,41 @@ router.get('/public/:slug', async (req, res) => {
     // Apply visibility rules to create a public-safe version
     const publicProfile = {
       id: profile.id,
-      fullName: profile.fullName,
-      email: profile.email,
-      highSchool: profile.highSchool,
-      position: profile.position,
-      gradYear: profile.gradYear,
-      cityState: profile.cityState,
+      fullName: profile.highSchoolName, // Map from database field to client expectation
+      email: profile.userId.toString(), // Map userId as a placeholder since email isn't in profile schema
+      highSchool: profile.highSchoolName,
+      position: profile.positionPrimary,
+      gradYear: profile.graduationYear?.toString(),
+      cityState: profile.customUrlSlug,
       
       // Apply visibility rules
-      heightFt: profile.isHeightVisible ? profile.heightFt : null,
-      heightIn: profile.isHeightVisible ? profile.heightIn : null,
-      weight: profile.isWeightVisible ? profile.weight : null,
+      heightFt: profile.isHeightVisible && profile.heightInInches ? Math.floor(Number(profile.heightInInches) / 12).toString() : null,
+      heightIn: profile.isHeightVisible && profile.heightInInches ? (Number(profile.heightInInches) % 12).toString() : null,
+      weight: profile.isWeightVisible ? profile.weightLbs?.toString() : null,
       
       // Other physical stats always visible
-      fortyYardDash: profile.fortyYardDash,
-      benchPress: profile.benchPress,
+      fortyYardDash: null, // This field doesn't exist in the schema
+      benchPress: null, // This field doesn't exist in the schema
       
       // Basic Info Fields
-      jerseyNumber: profile.jerseyNumber,
+      jerseyNumber: profile.jerseyNumber?.toString(),
       athleteRole: profile.athleteRole,
       customUrlSlug: profile.customUrlSlug,
       highSchoolName: profile.highSchoolName,
-      graduationYear: profile.graduationYear,
+      graduationYear: profile.graduationYear?.toString(),
       gpa: profile.isGpaVisible ? profile.gpa : null,
       
       // Media URLs with visibility control
       profilePhotoUrl: profile.profilePhotoUrl,
-      transcriptUrl: profile.isTranscriptVisible ? profile.transcriptUrl : null,
-      highlightVideoUrl: profile.highlightVideoUrl,
+      transcriptUrl: profile.isTranscriptVisible ? profile.transcriptPdfUrl : null,
+      highlightVideoUrl: profile.highlightVideoUrlPrimary,
       
       // NCAA fields with visibility control
       ncaaId: profile.isNcaaInfoVisible ? profile.ncaaId : null,
-      eligibilityYearsRemaining: profile.isNcaaInfoVisible ? profile.eligibilityYearsRemaining : null,
+      eligibilityYearsRemaining: profile.isNcaaInfoVisible ? profile.yearsOfEligibility?.toString() : null,
       transferPortalEntryDate: profile.isNcaaInfoVisible ? profile.transferPortalEntryDate : null,
       
-      // Hide all visibility flags
+      // Add timestamp
       createdAt: profile.createdAt
     };
 
