@@ -4,38 +4,10 @@
   "entries": [
     {
       "idx": 0,
-      "comment": "create user_role enum and users table",
-      "when": "2025-05-05T00:47:09.522Z",
-      "hash": "0000_red_karma",
-      "checksum": "18c8e56a3c4c35cdf02a7d5f9f6f9e5175a2c5fc4f5f6c069c97c7af4e312dae"
-    },
-    {
-      "idx": 1,
-      "comment": "add profiles table",
-      "when": "2025-05-05T00:47:09.523Z",
-      "hash": "0001_abnormal_yellowjacket",
-      "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
-    },
-    {
-      "idx": 2,
-      "comment": "test migration",
-      "when": "2025-05-05T00:47:09.524Z",
-      "hash": "0002_test_migration",
-      "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
-    },
-    {
-      "idx": 3,
-      "comment": "test migration system",
-      "when": "2025-05-05T00:47:09.525Z",
-      "hash": "0003_test_migration_system",
-      "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
-    },
-    {
-      "idx": 4,
-      "comment": "Add test column to test_migration_system table",
-      "when": "2025-05-05T14:33:06.178Z",
-      "hash": "0004_add_test_column_wolverine",
-      "checksum": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "version": "7",
+      "when": 1747144840213,
+      "tag": "0000_unusual_silver_surfer",
+      "breakpoints": true
     }
   ]
 }

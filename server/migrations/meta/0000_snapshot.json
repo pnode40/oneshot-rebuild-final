@@ -1,5 +1,5 @@
 {
-  "id": "53991213-0c52-4cc6-ac1f-545cb74f2205",
+  "id": "367792a5-7a88-44e1-a5c9-f4b240c94e59",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -10,75 +10,187 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "uuid",
           "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "athlete_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'high_school'"
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
           "notNull": true
         },
         "full_name": {
           "name": "full_name",
-          "type": "varchar(256)",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
-        "email": {
-          "name": "email",
-          "type": "varchar(256)",
+        "sport": {
+          "name": "sport",
+          "type": "sport_enum",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": true
-        },
-        "high_school": {
-          "name": "high_school",
-          "type": "varchar(256)",
-          "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "'football'"
         },
         "position": {
           "name": "position",
-          "type": "varchar(128)",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true
         },
         "grad_year": {
           "name": "grad_year",
-          "type": "varchar(8)",
+          "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "city_state": {
-          "name": "city_state",
-          "type": "varchar(128)",
+        "high_school": {
+          "name": "high_school",
+          "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "height_ft": {
-          "name": "height_ft",
-          "type": "varchar(4)",
+        "location": {
+          "name": "location",
+          "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "height_in": {
-          "name": "height_in",
-          "type": "varchar(4)",
+        "height": {
+          "name": "height",
+          "type": "varchar(50)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "weight": {
           "name": "weight",
-          "type": "varchar(8)",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gpa": {
+          "name": "gpa",
+          "type": "numeric(3, 2)",
           "primaryKey": false,
           "notNull": false
         },
-        "forty_yard_dash": {
-          "name": "forty_yard_dash",
-          "type": "varchar(8)",
+        "transcript_pdf_url": {
+          "name": "transcript_pdf_url",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "bench_press": {
-          "name": "bench_press",
-          "type": "varchar(8)",
+        "coach_name": {
+          "name": "coach_name",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "coach_email": {
+          "name": "coach_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coach_phone": {
+          "name": "coach_phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profile_photo_url": {
+          "name": "profile_photo_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "featured_video_url": {
+          "name": "featured_video_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "og_image_selection_url": {
+          "name": "og_image_selection_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "video_urls": {
+          "name": "video_urls",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bio": {
+          "name": "bio",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custom_url_slug": {
+          "name": "custom_url_slug",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "public": {
+          "name": "public",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "show_contact_info": {
+          "name": "show_contact_info",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "show_coach_info": {
+          "name": "show_coach_info",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "show_transcript": {
+          "name": "show_transcript",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "completeness_score": {
+          "name": "completeness_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "created_at": {
           "name": "created_at",
@@ -86,12 +198,57 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "profiles_custom_url_slug_idx": {
+          "name": "profiles_custom_url_slug_idx",
+          "columns": [
+            {
+              "expression": "custom_url_slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "profiles_user_id_users_id_fk": {
+          "name": "profiles_user_id_users_id_fk",
+          "tableFrom": "profiles",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "profiles_custom_url_slug_unique": {
+          "name": "profiles_custom_url_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "custom_url_slug"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -212,6 +369,46 @@
     }
   },
   "enums": {
+    "public.athlete_role": {
+      "name": "athlete_role",
+      "schema": "public",
+      "values": [
+        "high_school",
+        "transfer_portal"
+      ]
+    },
+    "public.position_enum": {
+      "name": "position_enum",
+      "schema": "public",
+      "values": [
+        "QB",
+        "RB",
+        "WR",
+        "TE",
+        "OL",
+        "DL",
+        "LB",
+        "DB",
+        "K",
+        "P",
+        "LS",
+        "ATH"
+      ]
+    },
+    "public.sport_enum": {
+      "name": "sport_enum",
+      "schema": "public",
+      "values": [
+        "football",
+        "basketball",
+        "baseball",
+        "soccer",
+        "track",
+        "swimming",
+        "volleyball",
+        "other"
+      ]
+    },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
