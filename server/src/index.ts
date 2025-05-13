@@ -47,6 +47,9 @@ app.use('/api/upload', uploadRouter);
 // Test route to directly insert a profile for testing
 app.get('/test-insert', async (req, res) => {
   try {
+    // Get custom slug from query parameter or use default
+    const customSlug = req.query.slug as string || "test-user-profile";
+    
     // Create a test profile with data that matches the schema
     const testProfile = {
       userId: 1, // Associate with the first user in the database
@@ -60,7 +63,8 @@ app.get('/test-insert', async (req, res) => {
       weightLbs: sql`${180}`, // Weight in lbs
       
       // Using the schema's field names instead of client-side names
-      customUrlSlug: "test-user-profile",
+      customUrlSlug: customSlug,
+      slug: customSlug, // Required field for public profiles
       
       // Setting default visibility flags
       isHeightVisible: true,
