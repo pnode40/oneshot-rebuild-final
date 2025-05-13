@@ -1,0 +1,10 @@
+# qr-rules.mdc
+
+rule.name = "QR Feature Rules"
+rule.scope = "feature"
+rule.trigger = "on_file_edit"
+
+## 📌 Behavior
+- Validate dual-mode rendering logic (social vs QR)
+- Ensure vCard download only triggers in QR context
+- Route and layout must reflect QR-specific public profile view

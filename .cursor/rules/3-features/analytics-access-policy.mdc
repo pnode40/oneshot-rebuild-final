@@ -1,0 +1,10 @@
+# analytics-access-policy.mdc
+
+rule.name = "Analytics Page Access Rules"
+rule.scope = "feature"
+rule.trigger = "on_file_edit"
+
+## 📌 Behavior
+- Analytics page must be access-guarded (role-based if applicable)
+- Do not expose usage or tracking data publicly
+- Use scoped data loading patterns (React Query or SSR if applicable)
