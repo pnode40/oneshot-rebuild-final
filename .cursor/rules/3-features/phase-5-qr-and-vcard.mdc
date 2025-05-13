@@ -1,0 +1,42 @@
+# phase-5-qr-and-vcard.mdc
+
+rule.name = "Phase 5 – QR Code & vCard Flow"
+rule.scope = "feature"
+rule.trigger = "on_task_start"
+
+## 🧠 Behavior
+
+Claude must implement logic for QR-based public profile access and dynamic vCard generation.
+
+### vCard Download (Frontend)
+- Trigger: PublicProfilePage.tsx detects `?source=qr` in URL query param
+- If present: show "Download vCard" button
+- vCard must include:
+  - Athlete's full name, email (vCardEmail), phone (vCardPhone)
+  - Coach name, coach email, coach phone
+  - Generated in `.vcf` format and downloaded via client-side logic
+
+### QR Code Generation (Internal UI)
+- On profile edit page, generate a QR code for:
+  ```
+  https://[domain]/u/:slug?source=qr
+  ```
+- Display the QR code for athlete to scan or share
+- Embed slug dynamically
+
+### API Responsibilities
+Ensure `GET /api/v1/profiles/public/:slug` includes vCard data fields:
+- vCardEmail, vCardPhone, coachName, coachEmail, coachPhone
+- Only include if visibility is enabled
+
+### Schema Requirements
+Ensure schema includes:
+- `vCardEmail`, `vCardPhone` (VARCHAR)
+- `coachName`, `coachEmail`, `coachPhone` (VARCHAR)
+
+## 📎 Required Docs
+load.docs = [
+  "OneShot-MVP-ExecutionPlan.md",
+  "OPS-MVP-ExecutionProtocol.md",
+  "Prompt-Templates.md"
+]

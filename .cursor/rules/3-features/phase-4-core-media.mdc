@@ -1,0 +1,46 @@
+# phase-4-core-media.mdc
+
+rule.name = "Phase 4 – Core Media Handling"
+rule.scope = "feature"
+rule.trigger = "on_task_start"
+
+## 🧠 Behavior
+
+Claude must implement all backend and frontend functionality related to core media features for MVP.
+
+### Profile Photo (Required)
+- Frontend: Upload field in internal profile form
+- Accept 1 image (JPEG or PNG), validate dimensions (min 1200x630)
+- Backend: Store in media directory or S3 bucket and persist reference in database
+- Public View: Display as banner on /profile/:slug
+
+### Highlight Video
+- Frontend: Text input field for YouTube or Hudl URL
+- Allow entry of both, but only one shown as "featured"
+- Add logic for athlete to pick which to display first
+- Include modal with guidance:
+  - YouTube: embeds on page
+  - Hudl: opens in new tab
+
+### Data Schema
+Ensure `profilePhotoUrl`, `highlightVideoUrl`, and `highlightVideoType` fields are included in schema and properly persisted via backend API.
+
+### API Responsibilities
+- Accept, validate, and save profile photo uploads
+- Ensure highlight video links are validated and stored
+- On GET /api/v1/profiles/public/:slug:
+  - Include media URLs
+  - Only return if visibility is enabled
+
+## 🧪 Manual Verification (Eric)
+- Upload image and verify public display
+- Test both YouTube and Hudl links
+- Toggle featured video option
+- Confirm loading behavior on mobile
+
+## 📎 Required Docs
+load.docs = [
+  "OneShot-MVP-ExecutionPlan.md",
+  "OPS-MVP-ExecutionProtocol.md",
+  "Prompt-Templates.md"
+]

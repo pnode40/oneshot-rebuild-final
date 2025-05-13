@@ -1,0 +1,35 @@
+# phase-2-profile-edit-ui.mdc
+
+rule.name = "Phase 2 – Internal Profile Editing UI"
+rule.scope = "feature"
+rule.trigger = "on_task_start"
+
+## 🧠 Behavior
+
+Claude must build the internal athlete-facing profile editing form.
+
+### Form Inputs to Include:
+- First name, last name
+- Jersey number (required)
+- Graduation year, high school
+- Positions (multi-select or tags)
+- Height, weight, GPA
+- Highlight video link(s)
+- NCAA ID, eligibility (conditionally visible if Transfer Portal role selected)
+- vCardEmail and vCardPhone
+- Head coach name, coachEmail, coachPhone
+
+### Functional Requirements:
+- Add visibility toggles for each public field (boolean flags)
+- Implement athlete role selection UI (HS vs. Transfer Portal)
+- Show/hide NCAA fields dynamically based on role
+- UI for selecting and inputting custom URL slug (with backend validation)
+- "Preview Public Profile" button: opens /u/:slug in new tab
+- Use Zod validation where applicable
+
+## 📎 Required Docs
+load.docs = [
+  "OneShot-MVP-Scope-ChatGPT-System.md",
+  "OPS-MVP-ExecutionProtocol.md",
+  "Prompt-Templates.md"
+]

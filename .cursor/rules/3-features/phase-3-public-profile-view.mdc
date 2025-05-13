@@ -1,0 +1,39 @@
+# phase-3-public-profile-view.mdc
+
+rule.name = "Phase 3 – Public Profile Display"
+rule.scope = "feature"
+rule.trigger = "on_task_start"
+
+## 🧠 Behavior
+
+Claude must build the frontend route and display page for viewing a public athlete profile.
+
+### Routing
+- Add route: `/profile/:slug`
+- Render `PublicProfilePage.tsx` component
+
+### Component Behavior
+- Use `useParams()` from `react-router-dom` to extract `slug`
+- Use `React Query` to call `GET /api/v1/profiles/public/:slug`
+- Display loading and error states
+
+### Display Fields
+Only render public-safe fields:
+- firstName + lastInitial
+- gradYear, highSchool
+- position(s)
+- height, weight, GPA (if visibility enabled)
+- highlight video (embed YouTube, link Hudl)
+- profile photo (banner style)
+
+### Conditional Behavior
+- If URL includes `?source=qr`, show a "Download vCard" button
+- If no profile is found, display a clean 404 message
+- Layout must be recruiter-scannable and mobile-first
+
+## 📎 Required Docs
+load.docs = [
+  "OneShot-MVP-ExecutionPlan.md",
+  "OPS-MVP-ExecutionProtocol.md",
+  "Prompt-Templates.md"
+]

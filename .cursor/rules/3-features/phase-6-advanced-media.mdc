@@ -1,0 +1,51 @@
+# phase-6-advanced-media.mdc
+
+rule.name = "Phase 6 – Advanced Media (Action Images, Transcripts, OG Images)"
+rule.scope = "feature"
+rule.trigger = "on_task_start"
+
+## 🧠 Behavior
+
+Claude must implement the full advanced media pipeline for MVP profile enhancement.
+
+### 🖼️ Action Images
+- Internal Profile UI:
+  - Upload field for up to 7 action photos
+  - Enforce minimum size (1200x630) for OG eligibility
+  - Athlete selects 1 image to use for OG preview
+- Backend:
+  - Accept and store images
+  - Compress images server-side if needed
+  - Save references and OG selection flag in DB
+
+### 🧾 Transcript Upload
+- Internal Profile UI:
+  - Upload PDF (transcript)
+  - Visibility toggle ("make public")
+- Backend:
+  - Accept and store file
+  - Save reference in profile
+- Public Profile:
+  - If marked visible, show "View Transcript" button (links to file)
+
+### 🖼️ OG Image Generation (for /u/:slug)
+- Backend service:
+  - On request or trigger, generate OG image using selected action photo
+  - Apply name, jersey number, grad year as overlay
+  - Store and serve from static CDN or OG route
+- Public Profile:
+  - Inject OG meta tags into page <head> using generated image
+
+### 📦 Schema Additions
+- actionImages: array of media refs (max 7)
+- transcriptPdfUrl: string
+- ogImageUrl: string (generated result)
+- ogSelectedImageId: string (points to selected action image)
+
+## 📎 Required Docs
+load.docs = [
+  "OneShot-MVP-ExecutionPlan.md",
+  "OPS-MVP-ExecutionProtocol.md",
+  "Prompt-Templates.md",
+  "Cursor-Doc-Principles.md"
+]

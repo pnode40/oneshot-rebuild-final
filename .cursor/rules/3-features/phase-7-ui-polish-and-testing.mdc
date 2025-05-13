@@ -1,0 +1,40 @@
+# phase-7-ui-polish-and-testing.mdc
+
+rule.name = "Phase 7 – UI/UX Polish & Final Testing"
+rule.scope = "feature"
+rule.trigger = "on_task_start"
+
+## 🧠 Behavior
+
+Claude must finalize the frontend UI/UX according to the OneShot brand system and ensure full manual test coverage.
+
+### 🎨 UI Enhancements
+- Apply colors, spacing, and typography rules from brand guide
+- Use mobile-first layout for all profile views
+- Polish layout of:
+  - Internal profile form
+  - Public profile page
+  - Upload components and modals
+- Ensure profile loads cleanly and is recruiter-scannable above the fold
+
+### 🧪 Final Testing Checklist (Eric)
+- Test all form fields + visibility toggles
+- Test image uploads (profile, action)
+- Test transcript upload + download
+- Verify OG image shows on link preview (Slack, Twitter, etc.)
+- Confirm correct highlight video logic
+- Scan profile QR and confirm vCard downloads correctly
+- Test layout on mobile, tablet, desktop breakpoints
+
+### 🛠️ Other Requirements
+- Fix all known bugs from previous phases
+- Run final `migrate:validate` and database integrity checks
+- Verify clean Git commits or snapshot if in offline mode
+
+## 📎 Required Docs
+load.docs = [
+  "OneShot-MVP-ExecutionPlan.md",
+  "OPS-MVP-ExecutionProtocol.md",
+  "Prompt-Templates.md",
+  "OneShot-Brand-System-Guide.md"
+]
