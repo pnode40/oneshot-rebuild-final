@@ -248,6 +248,7 @@ async function createProfile(req: AuthRequest, res: Response) {
           // Text fields
           userId: req.user.userId,
           customUrlSlug,
+          slug: customUrlSlug,
           
           // Map client field names to schema field names where needed
           highSchoolName: validatedData.highSchool || validatedData.highSchoolName,
@@ -365,6 +366,7 @@ function createProfileUpdateObject(
   
   if (customUrlSlug !== null && customUrlSlug !== existingProfile.customUrlSlug) {
     updateValues.customUrlSlug = customUrlSlug;
+    updateValues.slug = customUrlSlug;
   }
   
   // Numeric fields using sql`${...}` to handle type conversions between
@@ -529,6 +531,7 @@ async function updateProfile(req: AuthRequest, res: Response) {
       
       if (customUrlSlug !== null && customUrlSlug !== existingProfile.customUrlSlug) {
         updateValues.customUrlSlug = customUrlSlug;
+        updateValues.slug = customUrlSlug;
       }
       
       // Numeric fields using sql`${...}` to handle type conversions between
@@ -634,9 +637,36 @@ router.get('/public/:slug', async (req, res) => {
       return res.status(400).json(errorResponse('Profile slug is required'));
     }
 
-    // Get the profile by slug
+    // Get the profile by slug with only public-facing fields
     const profile = await db.query.profiles.findFirst({
-      where: eq(profiles.customUrlSlug, slug)
+      where: eq(profiles.slug, slug),
+      columns: {
+        // Core identity fields
+        id: true,
+        slug: true,
+        customUrlSlug: true,
+        
+        // Basic information
+        highSchoolName: true,
+        graduationYear: true,
+        positionPrimary: true,
+        jerseyNumber: true,
+        athleteRole: true,
+        
+        // Media
+        profilePhotoUrl: true,
+        highlightVideoUrlPrimary: true,
+        
+        // Physical stats (will be filtered by visibility flags)
+        heightInInches: true,
+        weightLbs: true,
+        gpa: true,
+        
+        // Visibility control flags
+        isHeightVisible: true,
+        isWeightVisible: true,
+        isGpaVisible: true
+      }
     });
 
     if (!profile) {
@@ -646,49 +676,36 @@ router.get('/public/:slug', async (req, res) => {
     // Apply visibility rules to create a public-safe version
     const publicProfile = {
       id: profile.id,
-      fullName: profile.highSchoolName, // Map from database field to client expectation
-      email: profile.userId.toString(), // Map userId as a placeholder since email isn't in profile schema
-      highSchool: profile.highSchoolName,
-      position: profile.positionPrimary,
-      gradYear: profile.graduationYear?.toString(),
-      cityState: profile.customUrlSlug,
-      
-      // Apply visibility rules
-      heightFt: profile.isHeightVisible && profile.heightInInches ? Math.floor(Number(profile.heightInInches) / 12).toString() : null,
-      heightIn: profile.isHeightVisible && profile.heightInInches ? (Number(profile.heightInInches) % 12).toString() : null,
-      weight: profile.isWeightVisible ? profile.weightLbs?.toString() : null,
-      
-      // Other physical stats always visible
-      fortyYardDash: null, // This field doesn't exist in the schema
-      benchPress: null, // This field doesn't exist in the schema
-      
-      // Basic Info Fields
-      jerseyNumber: profile.jerseyNumber?.toString(),
-      athleteRole: profile.athleteRole,
+      slug: profile.slug,
       customUrlSlug: profile.customUrlSlug,
-      highSchoolName: profile.highSchoolName,
-      graduationYear: profile.graduationYear?.toString(),
-      gpa: profile.isGpaVisible ? profile.gpa : null,
       
-      // Media URLs with visibility control
+      // Academic/Athletic information
+      schoolName: profile.highSchoolName,
+      graduationYear: profile.graduationYear,
+      position: profile.positionPrimary,
+      jerseyNumber: profile.jerseyNumber,
+      athleteRole: profile.athleteRole,
+      
+      // Media URLs
       profilePhotoUrl: profile.profilePhotoUrl,
-      transcriptUrl: profile.isTranscriptVisible ? profile.transcriptPdfUrl : null,
       highlightVideoUrl: profile.highlightVideoUrlPrimary,
       
-      // NCAA fields with visibility control
-      ncaaId: profile.isNcaaInfoVisible ? profile.ncaaId : null,
-      eligibilityYearsRemaining: profile.isNcaaInfoVisible ? profile.yearsOfEligibility?.toString() : null,
-      transferPortalEntryDate: profile.isNcaaInfoVisible ? profile.transferPortalEntryDate : null,
+      // Physical stats with visibility rules applied
+      height: profile.isHeightVisible ? profile.heightInInches : null,
+      weight: profile.isWeightVisible ? profile.weightLbs : null,
+      gpa: profile.isGpaVisible ? profile.gpa : null,
       
-      // Add timestamp
-      createdAt: profile.createdAt
+      // Format height for display if visible
+      heightFormatted: profile.isHeightVisible && profile.heightInInches 
+        ? `${Math.floor(Number(profile.heightInInches) / 12)}'${Number(profile.heightInInches) % 12}"` 
+        : null
     };
 
-    res.json(successResponse('Profile retrieved successfully', { profile: publicProfile }));
+    res.json(successResponse('Profile retrieved successfully', publicProfile));
   } catch (error) {
-    console.error('Error fetching public profile:', error);
+    console.error('Error retrieving public profile:', error);
     res.status(500).json(errorResponse(
-      'Failed to retrieve profile from database.',
+      'Failed to retrieve profile. Please try again later.',
       error
     ));
   }
