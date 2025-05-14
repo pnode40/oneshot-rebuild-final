@@ -35,16 +35,11 @@ OneShot is an AI-generated application being developed with a fully AI-driven de
 - React + Vite + Tailwind for frontend
 
 ## References
-@README-for-AI
+@OPS-MVP-ExecutionProtocol.md  
+@META-Doc-Directory.md  
+@DECISION-Log.md  
+@LESSONS.md  
+@README-for-AI  
 @META-Index
 
-## Mandatory Context Awareness
-
-Claude must always consult and reference the following foundational documents:
-
-- @OPS-MVP-ExecutionProtocol.md – Defines the development workflow and manual verification steps
-- @META-Doc-Directory.md – Lists all available docs and their roles
-- @DECISION-Log.md – Prevents re-litigating previous architectural choices
-- @LESSONS.md – Captures mistakes, corrections, and learned improvements
-- @README-for-AI – Provides initial onboarding and summary of rules
 

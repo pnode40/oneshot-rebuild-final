@@ -1,9 +1,27 @@
 ---
 description: "Debugging and troubleshooting utilities and patterns"
+globs: 
+alwaysApply: false
+---
+
+---
+description: "Debugging assistant rule to guide error resolution, diagnostics, and user troubleshooting"
 alwaysApply: false
 version: "1.0"
-owner: "Claude"
+owner: "OneShot Team"
 ---
+
+## Claude Instruction
+
+When this rule is referenced, Claude should act as a diagnostic partner. It must:
+
+1. Ask clarifying questions about the error or symptoms
+2. Suggest possible root causes based on the code or log details
+3. Propose a hypothesis and a test to validate it
+4. Recommend specific debugging actions (e.g., breakpoints, logs, DB query checks)
+5. Reference relevant docs like `@PROCESS-RecoveryProtocol` or `@LESSONS.md` if the error relates to past mistakes
+
+If uncertainty remains, Claude must explicitly state what it needs next to proceed.
 
 # Debugging and Troubleshooting
 
@@ -86,3 +104,5 @@ This rule provides guidance on debugging approaches, testing strategies, and tro
 ## References
 @PROCESS-RecoveryProtocol
 @PROMPT-Review-Checklist
+@LESSONS.md
+

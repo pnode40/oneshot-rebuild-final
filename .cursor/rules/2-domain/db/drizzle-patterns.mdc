@@ -6,7 +6,7 @@ alwaysApply: false
 
 ---
 description: "Database schema conventions using Drizzle ORM for OneShot"
-globs: globs: ["db/schema/**/*.ts"]
+globs: ["db/schema/**/*.ts"]
 alwaysApply: false
 version: "1.0"
 owner: "OneShot Team"
@@ -103,7 +103,8 @@ When editing or generating database schema logic using Drizzle ORM, Claude must:
 - Implement retry logic for transient failures
 
 ## References
-@PATTERN-Database
-@LOGIC-Core
-@DECISION-Log.md
-@QA-Overlay.md
+@QA-Overlay.md            
+@DECISION-Log.md        
+@PATTERN-Database      
+@LOGIC-Core               
+

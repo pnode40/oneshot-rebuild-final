@@ -127,3 +127,4 @@ Before generating any React component code, Claude must:
 ## References
 @PATTERN-Components
 @STYLE-Frontend
+@QA-Overlay-UI.md

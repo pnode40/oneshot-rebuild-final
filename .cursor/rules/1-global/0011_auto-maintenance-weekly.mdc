@@ -1,0 +1,24 @@
+# 0011_auto-maintenance-weekly.mdc
+
+rule.name = "Weekly Maintenance Audit"
+rule.scope = "global"
+rule.trigger = "on_time_interval"
+rule.interval = "7 days"
+
+## 🧠 Description
+Claude must run the `claude-cursor-maintenance-audit.md` script automatically every 7 days.
+
+If any issues are found:
+- Summarize unlinked docs
+- Flag new folders missing `.mdc` rules
+- Report broken load.docs references
+- Suggest draft rules to resolve gaps
+
+## ✅ Behavior
+
+When 7 days have passed since the last audit:
+- Load and execute `claude-cursor-maintenance-audit.md`
+- Print a summary of any inconsistencies
+- Prompt Eric with options to:
+  - Auto-fix (draft new `.mdc`)
+  - Review findings manually

@@ -1,0 +1,34 @@
+# 0010_auto-rule-policy.mdc
+
+rule.name = "Auto Rule Creation Policy"
+rule.scope = "global"
+rule.trigger = "on_feature_init"
+
+## 🎯 Objective
+Ensure Claude automatically generates appropriate `.mdc` rule files when new folders, domains, or docs are introduced into the project.
+
+## 📌 Behavior
+
+When Claude begins working in a new:
+- Source folder (e.g., `routes/profile/`, `components/media/`, `pages/onboarding/`)
+- Feature group (e.g., profile slugs, media upload, registration form)
+- Cursor doc that is used in boot context or prompt reference
+
+...and no matching `.mdc` rule exists, Claude must:
+
+1. Draft a new `.mdc` file appropriate to the scope:
+   - Global → `/1-global/`
+   - Domain → `/2-domain/`
+   - Feature-specific → `/3-features/`
+   - Utility logic → `/4-utils/`
+
+2. Include:
+   - `rule.name`, `rule.scope`, `rule.trigger`
+   - A rule summary in markdown block
+   - Placeholder behavior block for review
+
+3. Prompt Eric before finalizing:
+   - Ask: “Would you like me to save this draft to Cursor rules?”
+
+This ensures system-wide automation of best practices without relying on manual memory.
+

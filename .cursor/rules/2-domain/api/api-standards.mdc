@@ -100,3 +100,4 @@ Before generating any API logic, you must explicitly consult and apply the princ
 @PATTERN-API
 @LOGIC-Core
 @QA-Overlay
+@OPS-MVP-ExecutionProtocol.md
