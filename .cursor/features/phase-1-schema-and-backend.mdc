@@ -1,0 +1,25 @@
+# phase-1-schema-and-backend.mdc
+
+rule.name = "Phase 1 – Schema & Backend"
+rule.scope = "feature"
+rule.trigger = "on_task_start"
+
+## 🧠 Behavior
+
+- Modify `schema.ts` to include all MVP-required fields:
+  - jerseyNumber, gradYear, highSchool, positions, height, weight, GPA
+  - vCardEmail, vCardPhone
+  - coachName, coachEmail, coachPhone
+  - visibility flags for each field
+  - profilePhotoRef, actionImageRefs, transcriptRef
+- Ensure field types match required display formats
+- Use Drizzle ORM and generate a clean migration
+- Update POST/PUT /api/v1/profiles to support all fields
+- Public API must apply server-side filtering by visibility flags
+
+## 📎 Required Docs
+load.docs = [
+  "OneShot-MVP-Scope-ChatGPT-System.md",
+  "OPS-MVP-ExecutionProtocol.md",
+  "Prompt-Templates.md"
+]
