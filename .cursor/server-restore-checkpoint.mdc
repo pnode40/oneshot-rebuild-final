@@ -1,0 +1,8 @@
+{
+  "files": [
+    "server/src/**"
+  ],
+  "docs": [
+    "Server-Restore-Checkpoint.md"
+  ]
+}

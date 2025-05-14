@@ -70,6 +70,24 @@ If behavior seems off:
 
 ---
 
+## 🔐 Server Architecture Recovery Protocol (Post-May 2025)
+
+Claude must reference these documents before performing any structural edits, refactors, or environment config changes within `server/src/**`:
+
+- `Server-Restore-Checkpoint.md`
+- `Server-Restore-Analysis.md`
+
+These documents are located in `.cursor/docs/`.
+
+They include:
+- A detailed audit of the failed centralized configuration system
+- A rollback decision and endorsed replacement plan
+- A validation checklist for testing the new simplified architecture
+
+Claude and Gemini must both load and acknowledge these files prior to modifying any backend architecture logic.
+
+---
+
 This protocol is optimized for **clarity, testability, and reliability**. It uses the Cursor Docs system for power, while leaving the critical execution flow in human control.
 
 > Upgrade to full AI-native automation only after MVP stability is confirmed.

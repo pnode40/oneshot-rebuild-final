@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --exec \"ts-node src/index.ts\"",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "migrate": "ts-node src/db/migrate.ts",
@@ -28,6 +28,9 @@
     "migrate:standard": "ts-node src/db/standard-migrate.ts",
     "migrate:js": "node migrate.js",
     "migrate:show": "ts-node src/db/show-migrations.ts",
+    "migrate:test-workflow": "ts-node src/db/test-migration-workflow.ts",
+    "migrate:verify": "ts-node src/db/migration-verification.ts",
+    "migrate:cleanup": "ts-node src/db/cleanup-test-field.ts",
     "db:check": "ts-node src/db/check-table.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -56,6 +59,7 @@
     "drizzle-orm": "^0.43.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.2",
     "pg": "^8.15.6",
