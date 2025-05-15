@@ -1,27 +1,38 @@
-# Logs
-logs
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Build output
+dist/
+**/dist/
+
+# Log files
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+.tmp.*/
+.tmp*
+*.tmp
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
+.vscode/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
-
-# Temporary / Cache Directories
-.tmp.driveupload/
+*.sw? 

@@ -3,4 +3,20 @@ claude/scratchpad.ts
 
 # Environment files
 .env
-.env.local 
+.env.local
+test.env 
+
+# Upload directories - ignore contents but keep directories
+uploads/profiles/photos/*
+uploads/profiles/transcripts/*
+!uploads/profiles/photos/.gitkeep
+!uploads/profiles/transcripts/.gitkeep 
+
+# Server specific ignores
+.env.*
+!.env.example
+!.env.sample
+dist/
+uploads/ # If you don't want to commit user uploads, common for local dev
+node_modules/ # Should be covered by root, but doesn't hurt
+*.log 

@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, timestamp, integer, pgEnum, text, boolean, decimal, index, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp, integer, pgEnum, text, boolean, decimal, index } from 'drizzle-orm/pg-core';
 import { users, userRoleEnum } from './schema/users';
 
 // Define the athlete role enum
@@ -9,71 +9,53 @@ export const positionEnum = pgEnum('position_enum', [
   'QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'K', 'P', 'LS', 'ATH'
 ]);
 
-// Define the sports enum
-export const sportEnum = pgEnum('sport_enum', ['football', 'basketball', 'baseball', 'soccer', 'track', 'swimming', 'volleyball', 'other']);
-
 export const profiles = pgTable('profiles', {
-  // Primary key
-  id: uuid('id').defaultRandom().primaryKey(),
+  // Primary key and core fields
+  id: serial('id').primaryKey(),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
   
-  // User reference with proper foreign key constraint
-  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  // Basic profile information
+  customUrlSlug: varchar('custom_url_slug', { length: 100 }).unique(),
+  slug: varchar('slug', { length: 255 }).notNull().unique(),
   
-  // Role information
-  role: athleteRoleEnum('role').notNull().default('high_school'),
-  
-  // Split name fields
-  firstName: varchar('first_name', { length: 100 }).notNull(),
-  lastName: varchar('last_name', { length: 100 }).notNull(),
-  fullName: varchar('full_name', { length: 255 }).notNull(),
-  
-  // Sport and position information
-  sport: sportEnum('sport').notNull().default('football'),
-  position: varchar('position', { length: 100 }).notNull(),
-  
-  // Academic and school information
-  gradYear: integer('grad_year').notNull(),
-  highSchool: varchar('high_school', { length: 255 }).notNull(),
-  location: varchar('location', { length: 255 }).notNull(),
-  
-  // Physical attributes
-  height: varchar('height', { length: 50 }).notNull(), // e.g., "6'1"
-  weight: integer('weight').notNull(),
-  
-  // Optional academic information
+  // School information
+  highSchoolName: varchar('high_school_name', { length: 256 }),
+  graduationYear: integer('graduation_year'),
   gpa: decimal('gpa', { precision: 3, scale: 2 }),
-  transcriptPdfUrl: text('transcript_pdf_url'),
   
-  // Coach information
-  coachName: text('coach_name'),
-  coachEmail: text('coach_email'),
-  coachPhone: text('coach_phone'),
+  // Athletic information
+  positionPrimary: positionEnum('position_primary').notNull(),
+  positionSecondary: positionEnum('position_secondary'),
+  jerseyNumber: integer('jersey_number'),
+  athleteRole: athleteRoleEnum('athlete_role').default('high_school').notNull(),
+  
+  // Physical measurements
+  heightInInches: integer('height_in_inches'),
+  weightLbs: integer('weight_lbs'),
   
   // Media URLs
   profilePhotoUrl: text('profile_photo_url'),
-  featuredVideoUrl: text('featured_video_url'),
-  ogImageSelectionUrl: text('og_image_selection_url'),
-  videoUrls: text('video_urls').array(), // Array of strings
+  transcriptPdfUrl: text('transcript_pdf_url'),
+  highlightVideoUrlPrimary: text('highlight_video_url_primary'),
   
-  // Bio and additional info
-  bio: text('bio'),
+  // NCAA/Transfer Portal information
+  ncaaId: varchar('ncaa_id', { length: 50 }),
+  yearsOfEligibility: integer('years_of_eligibility'),
+  transferPortalEntryDate: timestamp('transfer_portal_entry_date'),
   
-  // Profile customization and visibility settings
-  customUrlSlug: varchar('custom_url_slug', { length: 100 }).notNull().unique(),
-  public: boolean('public').default(true).notNull(),
-  showContactInfo: boolean('show_contact_info').default(true).notNull(),
-  showCoachInfo: boolean('show_coach_info').default(true).notNull(),
-  showTranscript: boolean('show_transcript').default(true).notNull(),
-  
-  // Profile metrics
-  completenessScore: integer('completeness_score').default(0).notNull(),
-  
-  // Timestamps
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  // Privacy/Visibility control flags
+  isHeightVisible: boolean('is_height_visible').default(true).notNull(),
+  isWeightVisible: boolean('is_weight_visible').default(true).notNull(),
+  isGpaVisible: boolean('is_gpa_visible').default(true).notNull(),
+  isTranscriptVisible: boolean('is_transcript_visible').default(true).notNull(),
+  isNcaaInfoVisible: boolean('is_ncaa_info_visible').default(true).notNull()
 }, (table) => {
   return {
     customUrlSlugIdx: index('profiles_custom_url_slug_idx').on(table.customUrlSlug),
+    slugIdx: index('profiles_slug_idx').on(table.slug),
   };
 });
 

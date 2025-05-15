@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OneShot File Upload Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    .upload-container {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .response {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #f5f5f5;
+      white-space: pre-wrap;
+      font-family: monospace;
+      display: none;
+    }
+    .error {
+      color: #d32f2f;
+      background-color: #ffebee;
+      border-color: #ffcdd2;
+    }
+    .success {
+      color: #388e3c;
+      background-color: #e8f5e9;
+      border-color: #c8e6c9;
+    }
+  </style>
+</head>
+<body>
+  <h1>OneShot File Upload Test</h1>
+  
+  <div class="upload-container">
+    <h2>Profile Photo Upload</h2>
+    <form id="profilePhotoForm">
+      <div class="form-group">
+        <label for="profilePhoto">Select Image:</label>
+        <input type="file" id="profilePhoto" name="profilePhoto" accept="image/jpeg,image/png,image/webp">
+      </div>
+      <button type="submit">Upload Photo</button>
+    </form>
+    <div id="photoResponse" class="response"></div>
+  </div>
+  
+  <div class="upload-container">
+    <h2>Transcript Upload</h2>
+    <form id="transcriptForm">
+      <div class="form-group">
+        <label for="transcript">Select PDF:</label>
+        <input type="file" id="transcript" name="transcript" accept="application/pdf">
+      </div>
+      <button type="submit">Upload Transcript</button>
+    </form>
+    <div id="transcriptResponse" class="response"></div>
+  </div>
+  
+  <div class="upload-container">
+    <h2>Combined Upload</h2>
+    <form id="combinedForm">
+      <div class="form-group">
+        <label for="profilePhotoCombined">Profile Photo:</label>
+        <input type="file" id="profilePhotoCombined" name="profilePhoto" accept="image/jpeg,image/png,image/webp">
+      </div>
+      <div class="form-group">
+        <label for="transcriptCombined">Transcript:</label>
+        <input type="file" id="transcriptCombined" name="transcript" accept="application/pdf">
+      </div>
+      <button type="submit">Upload Both</button>
+    </form>
+    <div id="combinedResponse" class="response"></div>
+  </div>
+  
+  <div class="upload-container">
+    <h2>Debug Upload Test</h2>
+    <form id="debugForm">
+      <div class="form-group">
+        <label for="debugFile">Select File:</label>
+        <input type="file" id="debugFile" name="profilePhoto">
+      </div>
+      <button type="submit">Test Upload</button>
+    </form>
+    <div id="debugResponse" class="response"></div>
+  </div>
+
+  <script>
+    // Helper function to handle form submissions
+    function handleFormSubmit(formId, endpoint, responseId) {
+      const form = document.getElementById(formId);
+      const responseEl = document.getElementById(responseId);
+      
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        responseEl.textContent = 'Uploading...';
+        responseEl.style.display = 'block';
+        responseEl.className = 'response';
+        
+        try {
+          // Add auth token if available
+          const token = localStorage.getItem('authToken');
+          const headers = {};
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+          
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            headers
+          });
+          
+          const result = await response.json();
+          responseEl.textContent = JSON.stringify(result, null, 2);
+          
+          if (response.ok) {
+            responseEl.classList.add('success');
+          } else {
+            responseEl.classList.add('error');
+          }
+        } catch (error) {
+          responseEl.textContent = `Error: ${error.message}`;
+          responseEl.classList.add('error');
+        }
+      });
+    }
+    
+    // Initialize form handlers
+    document.addEventListener('DOMContentLoaded', () => {
+      handleFormSubmit('profilePhotoForm', '/api/upload/profile-photo', 'photoResponse');
+      handleFormSubmit('transcriptForm', '/api/upload/transcript', 'transcriptResponse');
+      handleFormSubmit('combinedForm', '/api/upload/profile-media', 'combinedResponse');
+      handleFormSubmit('debugForm', '/api/debug/upload-test', 'debugResponse');
+      
+      // Add token input field for testing
+      const tokenInput = document.createElement('div');
+      tokenInput.innerHTML = `
+        <div class="upload-container">
+          <h2>Authentication Token</h2>
+          <div class="form-group">
+            <label for="authToken">JWT Token:</label>
+            <input type="text" id="authToken" style="width: 100%;">
+          </div>
+          <button id="saveToken">Save Token</button>
+        </div>
+      `;
+      document.body.appendChild(tokenInput);
+      
+      document.getElementById('saveToken').addEventListener('click', () => {
+        const token = document.getElementById('authToken').value;
+        localStorage.setItem('authToken', token);
+        alert('Token saved to localStorage');
+      });
+    });
+  </script>
+</body>
+</html> 

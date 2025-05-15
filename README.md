@@ -1,54 +1,98 @@
-# React + TypeScript + Vite
+# OneShot: Athlete-Driven Recruiting Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+OneShot is a mobile-first recruiting platform that helps athletes create professional profiles and connect with recruiters. This application provides athletes with tools to showcase their skills, academic achievements, and highlight videos, all in a shareable format designed for recruiters.
 
-Currently, two official plugins are available:
+## Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The project is organized as a monorepo with client and server components:
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```
+oneshot/
+├── client/               # React frontend application
+│   └── src/              # Frontend source code
+├── server/               # Express.js backend application
+│   └── src/              # Backend source code
+└── package.json          # Root package.json for top-level scripts
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+For detailed architecture information, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Features
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+- Athlete profile management with privacy controls
+- Media management (photos, videos, transcripts)
+- Public profile viewing with mobile optimization
+- User authentication and role-based access
+- Slug-based profile URLs
+
+## Technology Stack
+
+- **Frontend**: React, TypeScript, Tailwind CSS, Vite
+- **Backend**: Express.js, TypeScript, Drizzle ORM
+- **Database**: PostgreSQL
+- **Authentication**: JWT-based
+- **Validation**: Zod
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL 14+
+- npm 9+
+
+### Installation
+
+1. Clone the repository
+   ```
+   git clone https://github.com/your-org/oneshot.git
+   cd oneshot
+   ```
+
+2. Install dependencies
+   ```
+   npm install
+   cd client && npm install
+   cd ../server && npm install
+   ```
+
+3. Set up environment variables
+   ```
+   cp .env.example .env
+   ```
+
+4. Run database migrations
+   ```
+   npm run migrate:direct
+   ```
+
+5. Start development servers
+   ```
+   # Terminal 1 - Backend
+   npm run dev
+   
+   # Terminal 2 - Frontend
+   cd client && npm run dev
+   ```
+
+## Available Scripts
+
+- `npm run dev` - Start the backend server
+- `npm run migrate:direct` - Run database migrations
+- `npm run migrate:validate` - Validate migration state
+- `npm run migrate:rebuild` - Rebuild migration tracking table
+
+For more detailed information about the migration system, see [server/src/db/README.md](./server/src/db/README.md).
+
+## Development
+
+For information about project status, roadmap, and contribution guidelines, see:
+
+- [OneShot-MVP-Scope.md](./OneShot-MVP-Scope.md) - Features and scope
+- [OneShot-MVP-Progress.md](./OneShot-MVP-Progress.md) - Current implementation status
+
+## Documentation
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - Project architecture
+- [server/src/db/README.md](./server/src/db/README.md) - Database and migration system
+- [MIGRATION-PLAN.md](./MIGRATION-PLAN.md) - Codebase consolidation plan

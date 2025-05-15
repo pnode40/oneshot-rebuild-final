@@ -1,18 +1,26 @@
+// 1. Environment setup
+import dotenv from 'dotenv';
+dotenv.config();
+
+// 2. Core imports
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import helmet from 'helmet';
 import { db } from './db/client';
-import { profiles, positionEnum, athleteRoleEnum } from './db/schema';
+
+// 3. Route imports
 import profileRouter from './routes/profile';
 import debugRouter from './routes/debug';
 import authRouter from './routes/auth';
 import testAuthRouter from './routes/test-auth';
 import uploadRouter from './routes/upload';
-import { sql } from 'drizzle-orm';
 
+// 4. Initialize Express
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// 5. Middleware setup
 // Configure CORS with explicit options
 const corsOptions = {
   origin: [
@@ -27,24 +35,28 @@ const corsOptions = {
   credentials: true
 };
 
-// Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// 6. Static file serving
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Serve static files from public directory
 app.use(express.static(path.join(process.cwd(), 'public')));
 
-// Routes
+// 7. Route registration
 app.use('/api/profile', profileRouter);
 app.use('/api/debug', debugRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/test-auth', testAuthRouter);
 app.use('/api/upload', uploadRouter);
 
-// Test route to directly insert a profile for testing
+// 8. Test route
+import { positionEnum, athleteRoleEnum, profiles } from './db/schema';
+import { sql } from 'drizzle-orm';
+
 app.get('/test-insert', async (req, res) => {
   try {
     // Get custom slug from query parameter or use default
@@ -98,7 +110,17 @@ app.get('/test-insert', async (req, res) => {
   }
 });
 
-// Test database connection
+// 9. Global error handler
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'production' ? undefined : String(err)
+  });
+});
+
+// 10. Database connection test
 async function testConnection() {
   try {
     console.log('Attempting to query profiles...');
@@ -109,7 +131,7 @@ async function testConnection() {
   }
 }
 
-// Start server
+// 11. Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`File upload test page available at: http://localhost:${PORT}/upload-test.html`);
