@@ -2,68 +2,75 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
+// Create a new Pool using the DATABASE_URL from .env
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 
 async function createTestUser() {
+  let client;
+  
   try {
-    console.log('Connecting to the database...');
-    const client = await pool.connect();
-    console.log('Connected to the database');
+    console.log('👤 Creating Test User');
+    console.log('---------------------------------');
+    
+    client = await pool.connect();
+    console.log('Connected to database');
 
-    // Check if the test user already exists
-    const checkUserQuery = 'SELECT * FROM users WHERE email = $1';
-    const checkResult = await client.query(checkUserQuery, ['test@example.com']);
+    // Check if test user already exists
+    const checkResult = await client.query(`
+      SELECT id, email FROM users WHERE email = 'test@oneshot.com';
+    `);
     
     if (checkResult.rows.length > 0) {
-      console.log('Test user already exists:', {
-        id: checkResult.rows[0].id,
-        email: checkResult.rows[0].email,
-        role: checkResult.rows[0].role
-      });
-      
-      // Release the client back to the pool
-      client.release();
+      console.log('✅ Test user already exists:');
+      console.log(`   - ID: ${checkResult.rows[0].id}`);
+      console.log(`   - Email: ${checkResult.rows[0].email}`);
       return;
     }
     
     // Hash the password
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    const password = 'Password123';
+    const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Insert the test user
-    const insertUserQuery = `
+    // Create a test user
+    const result = await client.query(`
       INSERT INTO users (
         email, 
         hashed_password, 
-        first_name, 
-        last_name, 
+        is_verified, 
         role, 
-        is_verified
-      ) 
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id, email, role
-    `;
+        first_name, 
+        last_name
+      ) VALUES (
+        'test@oneshot.com', 
+        $1, 
+        true, 
+        'athlete', 
+        'Test', 
+        'User'
+      ) RETURNING id, email;
+    `, [hashedPassword]);
     
-    const insertValues = [
-      'test@example.com',
-      hashedPassword,
-      'Test',
-      'User',
-      'athlete',
-      true
-    ];
+    if (result.rows.length > 0) {
+      console.log('✅ Created test user:');
+      console.log(`   - ID: ${result.rows[0].id}`);
+      console.log(`   - Email: ${result.rows[0].email}`);
+      console.log(`   - Password: ${password}`);
+    } else {
+      console.log('❌ Failed to create test user');
+    }
     
-    const insertResult = await client.query(insertUserQuery, insertValues);
-    console.log('Test user created:', insertResult.rows[0]);
-    
-    // Release the client back to the pool
-    client.release();
-  } catch (err) {
-    console.error('Error creating test user:', err);
-    process.exit(1);
+  } catch (error) {
+    console.error('\n❌ Failed to create test user:', error.message);
+  } finally {
+    if (client) {
+      client.release();
+      console.log('Database connection released');
+    }
+    await pool.end();
   }
 }
 
-// Execute the function
+// Run the function
 createTestUser(); 

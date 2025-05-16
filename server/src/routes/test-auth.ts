@@ -3,6 +3,8 @@ import bcrypt from 'bcrypt';
 import { db } from '../db/client';
 import { users } from '../db/schema';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
+import { authenticateJWT } from '../middleware/authMiddleware';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -97,15 +99,28 @@ router.post('/seed', async (req: Request, res: Response) => {
   }
 });
 
-/**
- * GET /api/test-auth/protected
- * Test route for checking authentication
- */
-router.get('/protected', authenticate, (req: AuthRequest, res: Response) => {
+// JWT Secret - in production, this should be in an environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'oneshot_dev_secret_key';
+
+// Public route - no authentication required
+router.get('/public', (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
-    message: 'This is a protected route',
-    user: req.user
+    message: 'This is a public endpoint that anyone can access',
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * GET /api/test-auth/protected
+ * Test route for checking authentication with Passport JWT
+ */
+router.get('/protected', authenticateJWT, (req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: 'You have successfully accessed a protected endpoint',
+    userData: req.user,
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -142,5 +157,26 @@ router.get(
     });
   }
 );
+
+// Generate a test token (for testing purposes only)
+router.get('/generate-test-token', (req: Request, res: Response) => {
+  // Create a test payload
+  const testUser = {
+    userId: 999,
+    email: 'test@example.com',
+    role: 'athlete' as const
+  };
+  
+  // Generate token with 1 hour expiry
+  const token = jwt.sign(testUser, JWT_SECRET, { expiresIn: '1h' });
+  
+  res.status(200).json({
+    success: true,
+    message: 'Test token generated successfully',
+    token,
+    expiresIn: '1 hour',
+    testUser
+  });
+});
 
 export default router; 

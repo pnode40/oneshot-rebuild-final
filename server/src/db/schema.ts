@@ -1,14 +1,30 @@
 import { pgTable, serial, varchar, timestamp, integer, pgEnum, text, boolean, decimal, index } from 'drizzle-orm/pg-core';
+
+// Import user schema
 import { users, userRoleEnum } from './schema/users';
 
-// Define the athlete role enum
-export const athleteRoleEnum = pgEnum('athlete_role', ['high_school', 'transfer_portal']);
+// Import athlete profiles schema
+import { 
+  athleteProfiles, 
+  sportsEnum, 
+  footballPositionsEnum, 
+  visibilityEnum, 
+  commitmentStatusEnum 
+} from './schema/athleteProfiles';
 
-// Define the position enum for football positions
+// Import media items schema
+import { 
+  mediaItems, 
+  mediaTypeEnum 
+} from './schema/mediaItems';
+
+// Legacy definitions - keeping for backwards compatibility
+export const athleteRoleEnum = pgEnum('athlete_role', ['high_school', 'transfer_portal']);
 export const positionEnum = pgEnum('position_enum', [
   'QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'K', 'P', 'LS', 'ATH'
 ]);
 
+// Legacy profiles table - keeping for backwards compatibility
 export const profiles = pgTable('profiles', {
   // Primary key and core fields
   id: serial('id').primaryKey(),
@@ -59,4 +75,20 @@ export const profiles = pgTable('profiles', {
   };
 });
 
-export { users, userRoleEnum };
+// Export all schemas and enums
+export { 
+  // Users
+  users, 
+  userRoleEnum,
+  
+  // Athlete Profiles
+  athleteProfiles,
+  sportsEnum,
+  footballPositionsEnum,
+  visibilityEnum,
+  commitmentStatusEnum,
+  
+  // Media Items
+  mediaItems,
+  mediaTypeEnum
+};

@@ -23,12 +23,17 @@ export const users = pgTable('users', {
   isVerified: boolean('is_verified').default(false).notNull(), // Tracks if email is verified
   emailVerificationToken: text('email_verification_token'), // Token sent for email verification (nullable)
 
+  // --- Password Reset ---
+  resetToken: text('reset_token'), // Token for password reset
+  resetTokenExpiry: timestamp('reset_token_expiry', { withTimezone: true }), // Expiry time for reset token
+
   // --- Role & Permissions ---
   role: userRoleEnum('role').default('athlete').notNull(), // User role using the defined enum
 
   // --- Timestamps & Metadata ---
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(), // Timestamp of creation
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(), // Timestamp of last update
+  lastLoginAt: timestamp('last_login_at', { withTimezone: true }), // Optional: Track last login time
 
   // --- Profile Information ---
   firstName: varchar('first_name', { length: 100 }),
