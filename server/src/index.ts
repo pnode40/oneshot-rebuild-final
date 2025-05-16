@@ -15,6 +15,7 @@ import debugRouter from './routes/debug';
 import authRouter from './routes/auth';
 import uploadRouter from './routes/upload';
 import testRoutes from './routes/testRoutes';
+import athleteProfileRoutes from './routes/athleteProfileRoutes';
 
 // 4. Initialize Express
 const app = express();
@@ -52,6 +53,7 @@ app.use('/api/debug', debugRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api', testRoutes);
+app.use('/api/athlete-profile', athleteProfileRoutes);
 
 // 8. Test route
 import { positionEnum, athleteRoleEnum, profiles } from './db/schema';
