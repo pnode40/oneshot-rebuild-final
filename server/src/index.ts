@@ -13,10 +13,8 @@ import { db } from './db/client';
 import profileRouter from './routes/profile';
 import debugRouter from './routes/debug';
 import authRouter from './routes/auth';
-import testAuthRouter from './routes/test-auth';
 import uploadRouter from './routes/upload';
-import testRbacRouter from './routes/test-rbac';
-import testValidationRouter from './routes/test-validation';
+import testRoutes from './routes/testRoutes';
 
 // 4. Initialize Express
 const app = express();
@@ -52,10 +50,8 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 app.use('/api/profile', profileRouter);
 app.use('/api/debug', debugRouter);
 app.use('/api/auth', authRouter);
-app.use('/api/test-auth', testAuthRouter);
 app.use('/api/upload', uploadRouter);
-app.use('/api/test-rbac', testRbacRouter);
-app.use('/api/test-validation', testValidationRouter);
+app.use('/api', testRoutes);
 
 // 8. Test route
 import { positionEnum, athleteRoleEnum, profiles } from './db/schema';
