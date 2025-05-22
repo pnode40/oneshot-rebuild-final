@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { z } from 'zod';
 import { useAuth } from '../context/useAuth';
+import { useMutation } from '@tanstack/react-query';
+import { getToken } from '../services/api';
+import { Link } from 'react-router-dom';
+import { FaPencilAlt } from 'react-icons/fa';
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -20,6 +24,21 @@ interface CreateProfileFormProps {
   onSuccess?: () => void;
 }
 
+// Input field label 
+const InputLabel = ({ htmlFor, children }: { htmlFor: string, children: React.ReactNode }) => (
+  <label htmlFor={htmlFor} className="block text-sm font-semibold text-[#0a1128] flex items-center space-x-1">
+    <span>{children}</span>
+    <FaPencilAlt className="h-3 w-3 text-gray-400 ml-1" />
+  </label>
+);
+
+// Section Heading component
+const SectionHeading = ({ children }: { children: React.ReactNode }) => (
+  <h3 className="text-lg font-bold text-[#0a1128] mb-3 pb-1 border-b border-gray-200">
+    {children}
+  </h3>
+);
+
 export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
   const { user } = useAuth();
   const [formData, setFormData] = useState<ProfileFormData>({
@@ -33,16 +52,13 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
     visibility: 'private'
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasProfile, setHasProfile] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [apiError, setApiError] = useState('');
 
   // Check if user already has a profile
   useEffect(() => {
     const checkProfile = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (!token) return;
 
         const response = await axios.get('/api/profile/me', {
@@ -67,48 +83,35 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
     }
   }, [user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: ProfileFormData) => ({ ...prev, [name]: value }));
-    // Clear error for this field when user makes changes
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-    // Clear any API error or success message when user makes changes
-    if (apiError) setApiError('');
-    if (successMessage) setSuccessMessage('');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setApiError('');
-    setErrors({});
-    
-    try {
-      // Validate form data
-      const validatedData = profileSchema.parse(formData);
-      setIsSubmitting(true);
-
-      // Get token for authentication
-      const token = localStorage.getItem('token');
+  // Create Profile Mutation
+  const mutation = useMutation({
+    mutationFn: async (validatedData: ProfileFormData) => {
+      const token = getToken();
       if (!token) {
-        setApiError('You must be logged in to create a profile');
-        setIsSubmitting(false);
-        return;
+        throw new Error('You must be logged in to create a profile');
       }
 
-      // Send data to the server
-      await axios.post('/api/profile', validatedData, {
-        headers: {
-          Authorization: `Bearer ${token}`
+      try {
+        const response = await axios.post('/api/profile', validatedData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        return response.data;
+      } catch (error) {
+        // Handle specific error types
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 401) {
+            throw new Error('Authentication required. Please log in again.');
+          }
+          throw new Error(error.response?.data?.message || 'Failed to save profile. Please try again.');
         }
-      });
-
-      setSuccessMessage('Profile created successfully!');
+        throw error;
+      }
+    },
+    onSuccess: () => {
       // Reset form after successful submission
       setFormData({
         name: '',
@@ -125,6 +128,36 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
       if (onSuccess) {
         onSuccess();
       }
+    }
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev: ProfileFormData) => ({ ...prev, [name]: value }));
+    // Clear error for this field when user makes changes
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+    // Clear any API error when user makes changes
+    if (mutation.error) {
+      mutation.reset();
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+    
+    try {
+      // Validate form data
+      const validatedData = profileSchema.parse(formData);
+      
+      // Submit the form data using the mutation
+      mutation.mutate(validatedData);
     } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         // Handle validation errors
@@ -135,102 +168,122 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
           }
         });
         setErrors(fieldErrors);
-      } else if (axios.isAxiosError(error)) {
-        // Handle API errors
-        setApiError(error.response?.data?.message || 'Failed to create profile. Please try again.');
-      } else {
-        // Handle unexpected errors
-        setApiError('An unexpected error occurred. Please try again.');
       }
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Create Your Athletic Profile</h2>
+    <div className="max-w-md mx-auto p-4 bg-white rounded-2xl shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-center uppercase tracking-tight text-[#0a1128]">Create Your Profile</h2>
       
-      {apiError && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-          {apiError}
+      {mutation.isLoading && (
+        <div className="mb-4 p-3 bg-[#f9f9f9] text-[#00c2ff] rounded-lg flex items-center">
+          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-[#00c2ff]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Creating your profile...</span>
         </div>
       )}
       
-      {successMessage && (
-        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">
-          {successMessage}
+      {mutation.isSuccess && (
+        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg">
+          Profile created successfully!
+        </div>
+      )}
+      
+      {mutation.isError && (
+        <div className="mb-4 p-3 bg-red-100 text-[#ff6b35] rounded-lg">
+          {mutation.error instanceof Error && 
+           (mutation.error.message.includes("login") || 
+            mutation.error.message.includes("Authentication") || 
+            mutation.error.message.includes("auth")) ? (
+            <div>
+              <p>Authentication required.</p> 
+              <p className="mt-1">Please <Link to="/login" className="font-medium underline hover:text-[#ff6b35]">log in</Link> to create your profile.</p>
+            </div>
+          ) : (
+            <p>{mutation.error instanceof Error ? mutation.error.message : 'Failed to create profile. Please try again.'}</p>
+          )}
         </div>
       )}
       
       {hasProfile ? (
-        <div className="mb-4 p-3 bg-yellow-100 text-yellow-700 rounded-md">
+        <div className="mb-4 p-3 bg-yellow-100 text-yellow-700 rounded-lg">
           You already have a profile. You can update it from your dashboard.
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Personal Information Section */}
+          <div className="space-y-4">
+            <SectionHeading>Personal Information</SectionHeading>
+
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <InputLabel htmlFor="name">
                 Name *
-              </label>
+              </InputLabel>
               <input
                 type="text"
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                  errors.name ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                <p className="mt-1 text-sm text-[#ff6b35]">{errors.name}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="highSchool" className="block text-sm font-medium text-gray-700">
+              <InputLabel htmlFor="highSchool">
                 High School *
-              </label>
+              </InputLabel>
               <input
                 type="text"
                 id="highSchool"
                 name="highSchool"
                 value={formData.highSchool}
                 onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border ${
-                  errors.highSchool ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                  errors.highSchool ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
               />
               {errors.highSchool && (
-                <p className="mt-1 text-sm text-red-600">{errors.highSchool}</p>
+                <p className="mt-1 text-sm text-[#ff6b35]">{errors.highSchool}</p>
               )}
             </div>
+          </div>
+
+          {/* Athletic Stats Section */}
+          <div className="space-y-4">
+            <SectionHeading>Athletic Stats</SectionHeading>
 
             <div>
-              <label htmlFor="position" className="block text-sm font-medium text-gray-700">
+              <InputLabel htmlFor="position">
                 Position *
-              </label>
+              </InputLabel>
               <input
                 type="text"
                 id="position"
                 name="position"
                 value={formData.position}
                 onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border ${
-                  errors.position ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                  errors.position ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
               />
               {errors.position && (
-                <p className="mt-1 text-sm text-red-600">{errors.position}</p>
+                <p className="mt-1 text-sm text-[#ff6b35]">{errors.position}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="height" className="block text-sm font-medium text-gray-700">
+              <InputLabel htmlFor="height">
                 Height *
-              </label>
+              </InputLabel>
               <input
                 type="text"
                 id="height"
@@ -238,38 +291,38 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
                 placeholder="e.g., 6'2&quot; or 188 cm"
                 value={formData.height}
                 onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border ${
-                  errors.height ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                  errors.height ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
               />
               {errors.height && (
-                <p className="mt-1 text-sm text-red-600">{errors.height}</p>
+                <p className="mt-1 text-sm text-[#ff6b35]">{errors.height}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="weight" className="block text-sm font-medium text-gray-700">
+              <InputLabel htmlFor="weight">
                 Weight (lbs) *
-              </label>
+              </InputLabel>
               <input
                 type="number"
                 id="weight"
                 name="weight"
                 value={formData.weight || ''}
                 onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border ${
-                  errors.weight ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                  errors.weight ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
               />
               {errors.weight && (
-                <p className="mt-1 text-sm text-red-600">{errors.weight}</p>
+                <p className="mt-1 text-sm text-[#ff6b35]">{errors.weight}</p>
               )}
             </div>
 
             <div>
-              <label htmlFor="gpa" className="block text-sm font-medium text-gray-700">
+              <InputLabel htmlFor="gpa">
                 GPA (Optional)
-              </label>
+              </InputLabel>
               <input
                 type="number"
                 id="gpa"
@@ -279,66 +332,71 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
                 max="4.0"
                 value={formData.gpa || ''}
                 onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border ${
-                  errors.gpa ? 'border-red-500' : 'border-gray-300'
-                } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                  errors.gpa ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
               />
               {errors.gpa && (
-                <p className="mt-1 text-sm text-red-600">{errors.gpa}</p>
+                <p className="mt-1 text-sm text-[#ff6b35]">{errors.gpa}</p>
               )}
             </div>
           </div>
 
-          <div>
-            <label htmlFor="highlightLinks" className="block text-sm font-medium text-gray-700">
-              Highlight Links (Optional, comma-separated)
-            </label>
-            <textarea
-              id="highlightLinks"
-              name="highlightLinks"
-              rows={3}
-              value={formData.highlightLinks}
-              onChange={handleChange}
-              placeholder="https://example.com/highlights, https://youtube.com/watch?v=..."
-              className={`mt-1 block w-full px-3 py-2 border ${
-                errors.highlightLinks ? 'border-red-500' : 'border-gray-300'
-              } rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-            />
-            {errors.highlightLinks && (
-              <p className="mt-1 text-sm text-red-600">{errors.highlightLinks}</p>
-            )}
+          {/* Additional Info Section */}
+          <div className="space-y-4">
+            <SectionHeading>Additional Information</SectionHeading>
+
+            <div>
+              <InputLabel htmlFor="highlightLinks">
+                Highlight Links (Optional)
+              </InputLabel>
+              <textarea
+                id="highlightLinks"
+                name="highlightLinks"
+                rows={3}
+                value={formData.highlightLinks}
+                onChange={handleChange}
+                placeholder="https://example.com/highlights, https://youtube.com/watch?v=..."
+                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                  errors.highlightLinks ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
+              />
+              {errors.highlightLinks && (
+                <p className="mt-1 text-sm text-[#ff6b35]">{errors.highlightLinks}</p>
+              )}
+            </div>
+
+            <div>
+              <InputLabel htmlFor="visibility">
+                Profile Visibility
+              </InputLabel>
+              <select
+                id="visibility"
+                name="visibility"
+                value={formData.visibility}
+                onChange={handleChange}
+                className="mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
+              >
+                <option value="private">Private</option>
+                <option value="public">Public</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Public profiles can be discovered by coaches and recruiters.
+              </p>
+            </div>
           </div>
 
           <div>
-            <label htmlFor="visibility" className="block text-sm font-medium text-gray-700">
-              Profile Visibility
-            </label>
-            <select
-              id="visibility"
-              name="visibility"
-              value={formData.visibility}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="private">Private</option>
-              <option value="public">Public</option>
-            </select>
-            <p className="mt-1 text-xs text-gray-500">
-              Public profiles can be discovered by coaches and recruiters.
-            </p>
-          </div>
-
-          <div className="flex justify-end">
             <button
               type="submit"
-              disabled={isSubmitting || hasProfile}
-              className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                isSubmitting || hasProfile
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+              disabled={mutation.isLoading || hasProfile || mutation.isSuccess}
+              className={`w-full py-2 rounded-lg font-semibold uppercase ${
+                mutation.isLoading || hasProfile || mutation.isSuccess
+                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                  : 'bg-[#00c2ff] text-white hover:bg-[#ff6b35] transition-colors duration-200'
               }`}
             >
-              {isSubmitting ? 'Creating...' : 'Create Profile'}
+              {mutation.isLoading ? 'Creating...' : mutation.isSuccess ? 'Created' : 'Create Profile'}
             </button>
           </div>
         </form>

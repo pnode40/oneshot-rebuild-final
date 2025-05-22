@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/useAuth';
+import { Link } from 'react-router-dom';
 
 interface RegisterProps {
   onSuccess?: () => void;
@@ -42,12 +43,6 @@ const Register: React.FC<RegisterProps> = ({ onSuccess }) => {
     }
     
     setIsLoading(true);
-    console.log("Form validated, preparing to register user:", { 
-      email: formData.email, 
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      role: formData.role 
-    });
     
     try {
       const userData = {
@@ -57,150 +52,153 @@ const Register: React.FC<RegisterProps> = ({ onSuccess }) => {
         lastName: formData.lastName,
         role: formData.role
       };
-      console.log("Calling authContext.register...");
+      
       const success = await register(userData);
-      console.log("Register function returned:", success);
       
       if (success) {
-        console.log("Registration successful, preparing for navigation");
-        console.log("onSuccess callback exists:", !!onSuccess);
-        
         if (onSuccess) {
-          console.log("RIGHT BEFORE NAVIGATION: About to call onSuccess() callback");
           onSuccess();
-          console.log("Navigation callback completed");
-        } else {
-          console.warn("Registration successful but no redirect callback provided");
         }
       } else {
-        console.error("Registration failed - no success flag in response");
         setError('Registration failed. Please try again.');
       }
     } catch (err) {
-      console.error("Registration threw an exception:", err);
       setError('An error occurred. Please try again.');
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center">Create an Account</h2>
-      
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
-      
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-2 gap-4 mb-4">
+    <div className="min-h-screen bg-[#0a1128] flex flex-col items-center justify-center px-4 py-12">
+      <div className="max-w-sm mx-auto w-full p-6 bg-white rounded-2xl shadow-xl">
+        <h2 className="text-2xl font-bold mb-6 text-center uppercase tracking-tight text-[#0a1128]">Create Account</h2>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-[#ff6b35] rounded-lg text-sm font-medium">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-semibold text-[#0a1128] mb-1">
+                First Name
+              </label>
+              <input
+                id="firstName"
+                name="firstName"
+                type="text"
+                value={formData.firstName}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-semibold text-[#0a1128] mb-1">
+                Last Name
+              </label>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                value={formData.lastName}
+                onChange={handleChange}
+                className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
+                required
+              />
+            </div>
+          </div>
+          
           <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-              First Name
+            <label htmlFor="email" className="block text-sm font-semibold text-[#0a1128] mb-1">
+              Email
             </label>
             <input
-              id="firstName"
-              name="firstName"
-              type="text"
-              value={formData.firstName}
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
               required
             />
           </div>
           
           <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name
+            <label htmlFor="password" className="block text-sm font-semibold text-[#0a1128] mb-1">
+              Password
             </label>
             <input
-              id="lastName"
-              name="lastName"
-              type="text"
-              value={formData.lastName}
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
+          </div>
+          
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-semibold text-[#0a1128] mb-1">
+              Confirm Password
+            </label>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
               required
             />
           </div>
-        </div>
-        
-        <div className="mb-4">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        
-        <div className="mb-4">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-          <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
-        </div>
-        
-        <div className="mb-4">
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-            Confirm Password
-          </label>
-          <input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        
-        <div className="mb-6">
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-            I am a
-          </label>
-          <select
-            id="role"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          
+          <div>
+            <label htmlFor="role" className="block text-sm font-semibold text-[#0a1128] mb-1">
+              I am a
+            </label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
+            >
+              <option value="athlete">Athlete</option>
+              <option value="recruiter">Recruiter</option>
+              <option value="parent">Parent</option>
+            </select>
+          </div>
+          
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`w-full h-10 px-4 font-semibold uppercase tracking-wide bg-[#00c2ff] text-white rounded-lg hover:bg-[#ff6b35] transition-colors duration-200 ${
+              isLoading ? 'opacity-70 cursor-not-allowed' : ''
+            }`}
           >
-            <option value="athlete">Athlete</option>
-            <option value="recruiter">Recruiter</option>
-            <option value="parent">Parent</option>
-          </select>
-        </div>
+            {isLoading ? 'Creating Account...' : 'Create Account'}
+          </button>
+          
+          <div className="text-center">
+            <p className="mt-4 text-center text-gray-600">
+              Already have an account? <Link to="/login" className="text-[#00c2ff] hover:text-[#ff6b35]">Log In</Link>
+            </p>
+          </div>
+        </form>
         
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            isLoading ? 'opacity-70 cursor-not-allowed' : ''
-          }`}
-        >
-          {isLoading ? 'Creating Account...' : 'Create Account'}
-        </button>
-      </form>
+        <div className="mt-8 pt-4 border-t border-gray-100 text-center">
+          <p className="text-xs text-gray-500">
+            OneShot • Built for athletes
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

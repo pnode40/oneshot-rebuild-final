@@ -7,7 +7,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="max-w-screen-lg mx-auto p-4">
+    <div className="bg-background text-body font-body min-h-screen max-w-screen-lg mx-auto p-4">
       <Header />
       <main>{children}</main>
     </div>

@@ -1,3 +1,28 @@
+/* ---------------------------------------------
+   🎨 OneShot Brand System – CSS Variables
+   DO NOT MODIFY WITHOUT DESIGN REVIEW
+---------------------------------------------- */
+
+/* Usage:
+   In Tailwind: text-primary, bg-accent, font-display
+   In raw CSS: color: var(--color-primary);
+*/
+
+:root {
+  --color-primary: #1f2a44;
+  --color-secondary: #0076e5;
+  --color-accent: #ff6b35;
+  --color-surface: #f5f5f5;
+  --color-background: #ffffff;
+  --color-muted: #e5e5e5;
+  --color-body: #2b2b2b;
+  --color-highlight: #4f2271;
+
+  --font-display: 'Montserrat', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-body: 'Open Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Tailwind base */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

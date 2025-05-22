@@ -3,3 +3,95 @@ description:
 globs:
 alwaysApply: false
 ---
+# Authentication System Rules
+
+## Purpose
+This rule enforces standards and constraints for the OneShot authentication system, ensuring security, consistency, and best practices across backend and frontend authentication components.
+
+## Referenced Documentation
+- `@FEATURE-AuthFlow.md` – Complete authentication flow documentation
+- `@PATTERN-JWTAuthentication.md` – JWT implementation standards
+- `@PATTERN-SecurePasswordManagement.md` – Password security standards
+- `@PATTERN-ReactAuthContext.md` – Auth context implementation
+- `@PATTERN-ZodRequestValidation.md` – Request validation standards
+
+## Core Requirements
+
+### Backend Authentication (`server/src/routes/auth.ts`)
+
+1. **JWT Implementation**
+   - Use environment variables for JWT secrets in production code
+   - Token payload must only include: user ID, email, and role
+   - Default token expiration must be 7 days
+   - Use the pattern from `@PATTERN-JWTAuthentication.md`
+
+2. **Password Security**
+   - Use bcrypt with minimum 10 salt rounds in development, 12+ in production
+   - Never return password data in API responses
+   - Follow the pattern in `@PATTERN-SecurePasswordManagement.md`
+
+3. **Request Validation**
+   - Use Zod for validation
+   - Include user-friendly error messages in schemas
+   - Return standardized error responses (status 400 with error details)
+   - Password validation must enforce 8+ character minimum
+
+4. **Error Handling**
+   - Use generic "Invalid email or password" message for login failures
+   - Do not expose which specific credential was incorrect
+   - Return appropriate HTTP status codes (400, 401, 409, 500)
+
+### Middleware (`server/src/middleware/auth.ts`)
+
+1. **Authentication Middleware**
+   - Verify token validity and expiration
+   - Return 401 for missing/invalid tokens
+   - Use `AuthRequest` interface for type safety
+
+2. **Authorization Middleware**
+   - Implement role-based access control with `authorize` middleware
+   - Return 403 for insufficient permissions
+
+### Frontend Authentication
+
+1. **Token Storage**
+   - Store JWT in localStorage (for MVP)
+   - Clear token on logout
+   - Handle token correctly for authentication headers
+
+2. **Authentication Context**
+   - Use React Context API with the pattern from `@PATTERN-ReactAuthContext.md`
+   - Provide consistent interface for auth operations
+   - Include proper loading and error states
+
+3. **UI Components**
+   - Implement client-side validation matching backend requirements
+   - Show appropriate error messages to users
+   - Disable submit buttons during loading states
+
+## Security Constraints
+
+1. **Password Requirements**
+   - Minimum 8 characters
+   - Validated on both frontend and backend
+   - Never transmitted or stored in plain text
+
+2. **API Security**
+   - Use HTTPS in production
+   - Implement proper CORS settings
+   - Include appropriate security headers
+
+3. **Token Handling**
+   - JWT must be transmitted only in authorization headers
+   - Never include sensitive data in token payload
+   - Use proper token expiration and validation
+
+## Roadmap TODOs
+
+These items are not yet implemented but should be considered for future development:
+
+1. Email verification workflow
+2. Token refresh mechanism
+3. "Remember me" functionality
+4. Password reset flow
+5. Enhanced token security with HTTP-only cookies rather than localStorage

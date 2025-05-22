@@ -1,72 +1,50 @@
-# 📌 Server-Restore-Checkpoint.md
+# ✅ Server Restore Checkpoint — 2025-05-15
 
-## 🧠 Purpose
-This document captures the structured rollback, self-audit, and recovery process following Claude’s failed attempt to refactor the OneShot server architecture. It must be referenced by Claude before making any future structural changes to the server.
+## ✅ Current Known Good State
 
----
+This document logs the fully verified and committed restoration of the OneShot server backend as of commit `8839c27`.
 
-## 🔙 Original Refactor Summary (Claude's Initial Goal)
-Claude refactored the server to:
-- Centralize environment configuration (via `config/index.ts`)
-- Improve TypeScript clarity (via updated `tsconfig.json` and path aliases)
-- Standardize server startup scripts from the project root
-- Simplify code structure by reducing index.ts dependencies
+### 🌐 Environment Configuration
 
-**Intended Outcome:** A cleaner, more robust, maintainable backend.
+- `dotenv.config()` is placed correctly at the top of `server/src/index.ts`.
+- `.env` file has been corrected: `DATABASE_URL` is now on a single line and loads properly at runtime.
+- Console logs confirmed correct loading of `DATABASE_URL` from both `index.ts` and `db/client.ts`.
 
----
+### 🛢️ Database Connectivity
 
-## ❌ What Went Wrong (Startup Failures)
-Despite best intentions, the refactor caused:
-- CWD conflicts when running `npm run dev` from the root
-- Module resolution errors (e.g., `Cannot find module 'src/db/client'`)
-- Broken TypeScript imports due to mismatched `baseUrl` and runtime paths
-- Confusing architecture that blocked all Phase 1 API endpoint testing
-- Needlessly complex config that introduced circular dependencies
+- Neon PostgreSQL database is successfully connected.
+- ECONNREFUSED errors from `::1:5432` have been resolved.
+- DB connection confirmed via live `profiles` query returning `[]`.
 
----
+### 🧱 Drizzle ORM & Migrations
 
-## ✅ Claude's Self-Audit Summary (Key Lessons Learned)
-Claude later performed a structured reflection and concluded:
-- The attempt to unify config introduced unnecessary complexity
-- CWD behavior in Node.js and scripts was misunderstood
-- `baseUrl` and `paths` in `tsconfig` don’t affect runtime
-- Simplicity and consistency in file structure and import patterns are more important than abstract modularity
+- All old migrations were deleted.
+- Schema files were updated to include missing fields (e.g., `slug`).
+- New baseline migrations were generated and applied via the standard `migrate.ts` and CLI.
+- Migration tracking is now in sync with the database and `meta/_journal.json`.
 
----
+### 🧼 Codebase Simplification
 
-## ✅ Gemini's Review
-Gemini reviewed Claude’s audit and:
-- Fully endorsed Claude’s “New Server Plan”
-- Recommended keeping Claude’s simplified plan but reintroducing Zod-based `.env` validation later
-- Agreed the prior refactor failed and supported rollback
+- `server/src/index.ts` refactored for linear flow:
+  - dotenv loading
+  - middleware setup
+  - route mounting
+  - error handler
+- `Helmet` and a global error handler were added.
+- All import paths are now standard, relative, and clear.
+- `server/tsconfig.json` updated to support node-style module resolution (`"moduleResolution": "node"`).
 
----
+### 📁 Directory Cleanup
 
-## 🔁 Eric’s Decision: Roll Back + Rebuild
-Eric decided to:
-- **Restore the server codebase to a known-good checkpoint** before Claude’s architectural changes
-- Task Claude with reimplementing the server using its **New Server Plan**, now informed by failure
+- Removed legacy and backup files (e.g. `client.ts.backup`, `migrations_backup/`, `drizzle.config.js`).
+- `server/uploads/` ignored via `.gitignore` (not tracked in Git).
 
-This plan includes:
-- Running the server as an isolated unit from `server/`
-- Using `cd server && npm run dev`
-- Removing complex `baseUrl`, aliasing, or nested config
-- Simplifying imports and startup logic
+### 🧪 Verified Outputs
+
+- Server starts with `npm run dev` from the `server/` directory.
+- `upload-test.html` available at `http://localhost:3001/upload-test.html`.
+- DB profile query returns successfully.
 
 ---
 
-## ⚠️ Boot Protocol for Claude (Mandatory)
-Before making any structural or architectural changes to the server, Claude must:
-1. Load and review `Server-Restore-Checkpoint.md`
-2. Cross-check current assumptions with the failures listed above
-3. Apply the principles of the “New Server Plan” ONLY
-
-This checkpoint is part of the OneShot memory OS.
-Do not repeat structural mistakes that have already been resolved.
-
----
-
-✅ Last Updated: 2025-05-12
-Maintainer: Eric (Founder)
-Collaborators: Claude (AI Dev), Gemini (System Architect)
+_Last Updated: 2025-05-15_

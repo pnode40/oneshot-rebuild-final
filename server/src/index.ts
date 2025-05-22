@@ -16,6 +16,10 @@ import authRouter from './routes/auth';
 import uploadRouter from './routes/upload';
 import testRoutes from './routes/testRoutes';
 import athleteProfileRoutes from './routes/athleteProfileRoutes';
+import mediaItemRouter from './routes/mediaItemRoutes';
+
+// Experimental track routes
+import videoLinkRoutes from '../oneshot-experimental/src/routes/videoLinkRoutes';
 
 // 4. Initialize Express
 const app = express();
@@ -54,6 +58,10 @@ app.use('/api/auth', authRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api', testRoutes);
 app.use('/api/athlete-profile', athleteProfileRoutes);
+app.use('/api/media', mediaItemRouter);
+
+// Experimental track routes
+app.use('/api/experimental/athlete', videoLinkRoutes);
 
 // 8. Test route
 import { positionEnum, athleteRoleEnum, profiles } from './db/schema';

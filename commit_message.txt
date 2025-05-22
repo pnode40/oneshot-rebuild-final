@@ -1,0 +1,9 @@
+fix(server): Complete restoration, stabilize DB & core structure
+
+- Fixed .env file parsing and DATABASE_URL loading issues, ensuring reliable connection to Neon PostgreSQL.
+- Aligned database schema with new Drizzle migrations, resetting old history.
+- Refactored server/src/index.ts for linear flow; added Helmet and global error handler.
+- Standardized server/tsconfig.json and ensured core import paths are relative.
+- Established and committed .gitignore files for repository hygiene.
+- Added server/public/upload-test.html for basic server testing.
+- Included relevant project documentation (MVP Scope, Progress, Brand Guide). 

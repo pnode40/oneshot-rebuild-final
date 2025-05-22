@@ -3,32 +3,36 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, us
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProfileInfoForm from './components/ProfileInfoForm';
 import ProfilePreview from './components/ProfilePreview';
-import PublicProfilePage from './components/PublicProfilePage';
+import PublicProfilePage from './pages/PublicProfilePage';
 import Login from './components/Login';
 import Register from './components/Register';
 import Layout from './components/Layout';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import { TestAuthProvider } from './context/TestAuthContext';
+import { ProfileData } from './types'; // Import shared type
 import './App.css';
 
 // Create a client
 const queryClient = new QueryClient();
 
-// Define the shape of the profile data
-export interface ProfileData {
-  fullName: string;
-  email: string;
-  highSchool: string;
-  position: string;
-  gradYear: string;
-  cityState: string;
-  heightFt: string;
-  heightIn: string;
-  weight: string;
-  fortyYardDash: string;
-  benchPress: string;
-}
+// // Define the shape of the profile data - REMOVED, NOW IMPORTED
+// export interface ProfileData {
+//   fullName: string;
+//   email: string;
+//   highSchool: string;
+//   position: string;
+//   gradYear: string;
+//   cityState: string;
+//   heightFt: string;
+//   heightIn: string;
+//   weight: string;
+//   fortyYardDash: string;
+//   benchPress: string;
+//   mockUploads?: { [key: string]: { name: string; type: string; url?: string } }; // For Phase 2
+// }
+
+const TEST_MODE_PROFILE_DATA_KEY = 'oneShot_testMode_profileData';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -83,19 +87,18 @@ const isTestMode = () => {
 // App container that chooses between real or test authentication
 const AppAuthContainer: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const testMode = searchParams.get('test') === 'true';
-  
-  // Save test mode preference to localStorage
+  // Prioritize URL param to activate, then check localStorage
+  const urlTestMode = searchParams.get('test') === 'true';
+  const localStorageTestMode = localStorage.getItem('oneshot_test_mode') === 'true';
+
   useEffect(() => {
-    if (testMode) {
+    if (urlTestMode) {
       localStorage.setItem('oneshot_test_mode', 'true');
     }
-  }, [testMode]);
+  }, [urlTestMode]);
 
-  // Get test mode status from localStorage too
-  const useTestMode = testMode || localStorage.getItem('oneshot_test_mode') === 'true';
+  const useTestMode = urlTestMode || localStorageTestMode;
 
-  // Show test mode indicator
   useEffect(() => {
     if (useTestMode) {
       const testBanner = document.createElement('div');
@@ -113,7 +116,9 @@ const AppAuthContainer: React.FC = () => {
       document.body.appendChild(testBanner);
       
       return () => {
-        document.body.removeChild(testBanner);
+        if (document.body.contains(testBanner)) {
+            document.body.removeChild(testBanner);
+        }
       };
     }
   }, [useTestMode]);
@@ -131,26 +136,76 @@ const AppAuthContainer: React.FC = () => {
 
 const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
   const navigate = useNavigate();
-  const [profileData, setProfileData] = useState<ProfileData>({
-    fullName: testMode ? 'Test User' : '',
-    email: testMode ? 'test@example.com' : '',
-    highSchool: testMode ? 'Central High' : '',
-    position: testMode ? 'Quarterback' : '',
-    gradYear: testMode ? '2025' : '',
-    cityState: testMode ? 'Austin, TX' : '',
-    heightFt: testMode ? '6' : '',
-    heightIn: testMode ? '2' : '',
-    weight: testMode ? '185' : '',
-    fortyYardDash: testMode ? '4.6' : '',
-    benchPress: testMode ? '225' : '',
+  
+  const initialDefaultMockData: ProfileData = {
+    fullName: 'Test User',
+    email: 'test@example.com',
+    highSchool: 'Central High',
+    position: 'Quarterback',
+    gradYear: '2025',
+    cityState: 'Austin, TX',
+    heightFt: '6',
+    heightIn: '2',
+    weight: '185',
+    fortyYardDash: '4.6',
+    benchPress: '225',
+    bio: 'This is a test bio for the mock user. Passionate about the game and always looking to improve.',
+    socialMediaLinks: {
+      twitter: '@testuser_oneshot',
+      instagram: 'testuser_oneshot',
+      hudl: 'hudl.com/profile/testuser'
+    },
+    // profileImageUrl is intentionally undefined for test mode
+    // This ensures that after a refresh, it won't override the null/undefined state
+    // that indicates no active blob URL is available
+    profileImageUrl: undefined,
+    bannerImageUrl: 'https://via.placeholder.com/600x200/4B5563/ffffff?Text=OneShot+Banner', // Placeholder banner
+    mockUploads: {},
+    // Coach Info for Mock Data
+    coachName: 'Coach John Doe',
+    coachEmail: 'coach.doe@example.com',
+    coachPhone: '555-123-4567',
+    coachTitle: 'Head Coach'
+  };
+
+  const [profileData, setProfileData] = useState<ProfileData>(() => {
+    if (testMode) {
+      const storedData = localStorage.getItem(TEST_MODE_PROFILE_DATA_KEY);
+      if (storedData) {
+        try {
+          const parsedData = JSON.parse(storedData);
+          return { ...initialDefaultMockData, ...parsedData }; 
+        } catch (e) {
+          console.error("Failed to parse test mode profile data from localStorage", e);
+          return initialDefaultMockData;
+        }
+      }
+      return initialDefaultMockData;
+    }
+    // Default for non-test mode, ensuring all fields from ProfileData are initialized
+    return { 
+      fullName: '', email: '', highSchool: '', position: '', gradYear: '', 
+      cityState: '', heightFt: '', heightIn: '', weight: '', fortyYardDash: '', benchPress: '', 
+      bio: '', socialMediaLinks: {}, profileImageUrl: '', bannerImageUrl: '', mockUploads: {},
+      // Initialize coach fields for non-test mode too
+      coachName: '', coachEmail: '', coachPhone: '', coachTitle: ''
+    };
   });
 
   const handleProfileChange = (data: Partial<ProfileData>) => {
-    setProfileData(prev => ({ ...prev, ...data }));
+    setProfileData(prev => {
+      const newData = { ...prev, ...data };
+      if (testMode) {
+        localStorage.setItem(TEST_MODE_PROFILE_DATA_KEY, JSON.stringify(newData));
+      }
+      return newData;
+    });
   };
 
   const handleAuthSuccess = () => {
     console.log("Authentication success callback triggered, redirecting to home page...");
+    // In test mode, profileData should already be loaded from localStorage or defaults
+    // If not in test mode, actual user data would come from AuthProvider
     navigate('/');
   };
 

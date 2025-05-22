@@ -1,8 +1,10 @@
 {
-  "files": [
-    "server/src/**"
+  "load_files": [
+    "Server-Restore-Checkpoint.md",
+    "Server-Restore-Analysis.md"
   ],
-  "docs": [
-    "Server-Restore-Checkpoint.md"
-  ]
+  "flags": {
+    "block-generation-without-verification": true,
+    "enforce-new-server-plan": true
+  }
 }

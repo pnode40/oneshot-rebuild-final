@@ -6,14 +6,20 @@ import {
   text,
   timestamp,
   boolean,
-  pgEnum,
-  index
+  index,
+  pgEnum
 } from 'drizzle-orm/pg-core';
 import { athleteProfiles } from './athleteProfiles';
+import { relations } from 'drizzle-orm';
 
-// Define media type enum
+// Export the media type enum as requested
 export const mediaTypeEnum = pgEnum('media_type_enum', [
-  'highlight_video', 'game_film', 'skills_video', 'interview', 'image', 'document', 'other'
+  'highlight_video',
+  'game_film',
+  'training_clip',
+  'document',
+  'image',
+  'other',
 ]);
 
 // Define the media items table
@@ -21,34 +27,44 @@ export const mediaItems = pgTable('media_items', {
   // Primary key
   id: serial('id').primaryKey(),
   
-  // Foreign key to athlete profile
+  // Foreign key to athlete_profiles table
   athleteProfileUserId: integer('athlete_profile_user_id')
-    .notNull()
-    .references(() => athleteProfiles.userId, { onDelete: 'cascade' }),
-  
+    .notNull() // As per final schema, not nullable
+    .references(() => athleteProfiles.userId, { onDelete: 'cascade' }), // As per final schema
+
   // Media metadata
-  title: varchar('title', { length: 255 }).notNull(),
-  description: text('description'),
-  mediaType: mediaTypeEnum('media_type').default('highlight_video').notNull(),
+  title: varchar('title', { length: 255 }), // Nullable by default
+  description: text('description'),         // Nullable by default
+
+  // Separate URL fields
+  videoUrl: text('video_url'),              // Nullable by default
+  thumbnailUrl: text('thumbnail_url'),      // Nullable by default
+  documentUrl: text('document_url'),        // Nullable by default
+  imageUrl: text('image_url'),              // Nullable by default
+
+  mediaType: mediaTypeEnum('media_type').notNull(), // Using the defined pgEnum
   
-  // URLs
-  videoUrl: text('video_url'),
-  thumbnailUrl: text('thumbnail_url'),
-  documentUrl: text('document_url'),
-  imageUrl: text('image_url'),
-  
-  // Featured status
-  isFeatured: boolean('is_featured').default(false),
-  isPublic: boolean('is_public').default(true),
+  // Status flags (kept from original, can be used by service)
+  isFeatured: boolean('is_featured').default(false).notNull(),
+  isPublic: boolean('is_public').default(true).notNull(),
   
   // Timestamps
-  uploadDate: timestamp('upload_date', { withTimezone: true }).defaultNow().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => {
   return {
-    athleteProfileIdIdx: index('media_athlete_profile_id_idx').on(table.athleteProfileUserId),
-    featuredIdx: index('media_featured_idx').on(table.isFeatured),
-    mediaTypeIdx: index('media_type_idx').on(table.mediaType)
+    athleteProfileUserIdIdx: index('media_athlete_profile_user_id_idx').on(table.athleteProfileUserId),
+    // featuredIdx: index('media_featured_idx').on(table.isFeatured), // Kept existing indexes
+    // mediaTypeIdx: index('media_type_idx').on(table.mediaType) // if needed
   };
-}); 
+});
+
+export const mediaItemsRelations = relations(mediaItems, ({ one }) => ({
+  athleteProfile: one(athleteProfiles, {
+    fields: [mediaItems.athleteProfileUserId],
+    references: [athleteProfiles.userId],
+  })
+}));
+
+export type MediaItem = typeof mediaItems.$inferSelect;
+export type NewMediaItem = typeof mediaItems.$inferInsert; 
