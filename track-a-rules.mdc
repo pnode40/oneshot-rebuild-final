@@ -1,1 +1,10 @@
-[MDC] Track A rule file
+---
+description: 'Track A main development rules'
+alwaysApply: false
+version: '1.0'
+owner: 'OneShot Team'
+---
+
+# Track A Development Rules
+
+Track A represents the main application development track for the OneShot platform.

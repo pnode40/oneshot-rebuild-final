@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProfileInfoForm from './components/ProfileInfoForm';
 import ProfilePreview from './components/ProfilePreview';
 import PublicProfilePage from './pages/PublicProfilePage';
+import EnhancedProfileTestPage from './pages/EnhancedProfileTestPage';
 import Login from './components/Login';
 import Register from './components/Register';
 import Layout from './components/Layout';
@@ -111,7 +112,7 @@ const AppAuthContainer: React.FC = () => {
       testBanner.style.borderTopLeftRadius = '6px';
       testBanner.style.fontSize = '12px';
       testBanner.style.zIndex = '9999';
-      testBanner.textContent = '🧪 Test Mode';
+      testBanner.textContent = '�� Test Mode';
       
       document.body.appendChild(testBanner);
       
@@ -254,6 +255,9 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
         
         {/* Public profile route */}
         <Route path="/profile/:slug" element={<PublicProfilePage />} />
+        
+        {/* Enhanced Profile Test Page - Priority #1 Features */}
+        <Route path="/enhanced-profile-test" element={<EnhancedProfileTestPage />} />
         
         {/* Original test component route */}
         <Route 

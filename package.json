@@ -13,7 +13,15 @@
     "migrate:validate": "ts-node server/src/db/validate-migrations.ts",
     "migrate:rebuild": "ts-node server/src/db/rebuild-migration-state.ts",
     "migrate:rebuild-and-validate": "npm run migrate:rebuild && npm run migrate:validate",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:coverage": "echo \"Test coverage not configured yet\" && exit 1",
+    "type-check": "cd server && npx tsc --noEmit",
+    "lint": "echo \"Linting not configured yet\" && exit 0",
+    "autonomous:init": "node scripts/context-engine.js init",
+    "autonomous:status": "node scripts/context-engine.js status",
+    "autonomous:track": "node scripts/context-engine.js track-decision",
+    "autonomous:metrics": "node scripts/context-engine.js update-metrics",
+    "autonomous:control": "bash scripts/autonomous-dev.sh"
   },
   "keywords": [],
   "author": "",

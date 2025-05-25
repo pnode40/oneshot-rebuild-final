@@ -1,21 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { AuthenticatedUser } from '../types';
 
 // JWT Secret - in production, this should be in an environment variable
 const JWT_SECRET = process.env.JWT_SECRET || 'oneshot_dev_secret_key';
 
-// JWT payload interface
-interface JwtPayload {
-  userId: number;
-  email: string;
-  role: 'athlete' | 'recruiter' | 'admin' | 'parent';
-}
+// JWT payload interface - matches AuthenticatedUser structure
+interface JwtPayload extends AuthenticatedUser {}
 
-/**
- * JWT Authentication middleware that uses direct verification
- * Verifies JWT token and attaches user to request object
- */
-export function authenticateJWT(req: Request, res: Response, next: NextFunction) {
+/** * JWT Authentication middleware that uses direct verification * Verifies JWT token and attaches user to request object */export function authenticateJWT(req: Request, res: Response, next: NextFunction) {
   // Get authorization header
   const authHeader = req.headers.authorization;
   
@@ -41,8 +34,4 @@ export function authenticateJWT(req: Request, res: Response, next: NextFunction)
     
     next();
   } catch (error) {
-    return res.status(401).json({ 
-      message: 'Invalid or expired token' 
-    });
-  }
-} 
+        return res.status(401).json({       message: 'Invalid or expired token'     });  }}/** * Alias for authenticateJWT for compatibility with existing code */export const authenticate = authenticateJWT; 

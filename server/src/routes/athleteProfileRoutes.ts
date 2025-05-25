@@ -5,6 +5,9 @@ import { validateRequest } from '../middleware/validationMiddleware';
 import { athleteProfileSchemas } from '../validations/athleteProfileSchemas';
 import * as athleteProfileService from '../services/athleteProfileService';
 import { z } from 'zod';
+import { db } from '../db/client';
+import { athleteProfiles, profiles } from '../db/schema';
+import { eq, or } from 'drizzle-orm';
 
 // Define the user type expected from authentication middleware
 interface AuthUser {
@@ -124,5 +127,62 @@ router.get(
     }
   }
 );
+
+/**
+ * GET /profile/check-slug/:slug
+ * Check if a custom URL slug is available
+ */
+router.get('/check-slug/:slug', async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    
+    // Basic validation
+    if (!slug || slug.length < 3 || slug.length > 50) {
+      return res.json({
+        available: false,
+        message: 'Slug must be between 3 and 50 characters'
+      });
+    }
+    
+    // Check if slug contains only valid characters (letters, numbers, hyphens)
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      return res.json({
+        available: false,
+        message: 'Slug can only contain lowercase letters, numbers, and hyphens'
+      });
+    }
+    
+    // Check against both athlete profiles and legacy profiles tables
+    const [existingAthleteProfile, existingLegacyProfile] = await Promise.all([
+      // Check new athlete profiles table (when we add slug field)
+      // For now, just return null since the schema doesn't have slug yet
+      Promise.resolve(null),
+      
+      // Check legacy profiles table
+      db.query.profiles.findFirst({
+        where: or(
+          eq(profiles.customUrlSlug, slug),
+          eq(profiles.slug, slug)
+        ),
+        columns: { id: true }
+      })
+    ]);
+    
+    const isAvailable = !existingAthleteProfile && !existingLegacyProfile;
+    
+    res.json({
+      available: isAvailable,
+      message: isAvailable 
+        ? 'This slug is available!' 
+        : 'This slug is already taken'
+    });
+  } catch (err) {
+    console.error('Error checking slug availability:', err);
+    res.status(500).json({
+      available: false,
+      message: 'Error checking slug availability'
+    });
+  }
+});
 
 export default router; 

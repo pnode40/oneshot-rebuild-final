@@ -1,253 +1,339 @@
 import request from 'supertest';
 import express from 'express';
-import { authenticateJWT } from '../../src/middleware/authMiddleware';
-import { requireSelfOrAdmin } from '../../src/middleware/rbacMiddleware';
+import { testDb, setupTestDatabase, cleanupTestDatabase } from '../setup';
+import { createTestUser, createTestProfile, createTestMediaItem } from '../factories';
 import mediaRoutes from '../../src/routes/mediaRoutes';
+import jwt from 'jsonwebtoken';
 import fs from 'fs/promises';
-import { db } from '../../src/db/client';
 import path from 'path';
-
-// Mock dependencies
-jest.mock('../../src/middleware/authMiddleware', () => ({
-  authenticateJWT: jest.fn((req, res, next) => next())
-}));
-
-jest.mock('../../src/middleware/rbacMiddleware', () => ({
-  requireSelfOrAdmin: jest.fn((req, res, next) => next())
-}));
-
-jest.mock('fs/promises', () => ({
-  access: jest.fn().mockResolvedValue(undefined),
-  unlink: jest.fn().mockResolvedValue(undefined)
-}));
-
-jest.mock('../../src/db/client', () => ({
-  db: {
-    select: jest.fn().mockReturnThis(),
-    from: jest.fn().mockReturnThis(),
-    where: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockResolvedValue([{
-      id: 1,
-      athleteProfileUserId: 123,
-      title: 'Test Media',
-      description: 'Test description',
-      mediaType: 'image',
-      videoUrl: null,
-      imageUrl: '/uploads/profile-photos/test-image.jpg',
-      documentUrl: null,
-      thumbnailUrl: null,
-      isFeatured: false,
-      isPublic: true,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }]),
-    update: jest.fn().mockReturnThis(),
-    set: jest.fn().mockReturnThis(),
-    returning: jest.fn().mockResolvedValue([{
-      id: 1,
-      athleteProfileUserId: 123,
-      title: 'Updated Media',
-      mediaType: 'image',
-      updatedAt: new Date()
-    }]),
-    delete: jest.fn().mockReturnThis()
-  }
-}));
 
 // Create test app with routes
 const app = express();
 app.use(express.json());
-app.use('/', mediaRoutes);
+app.use('/api/media', mediaRoutes);
 
-describe('Media Routes', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    
-    // Setup authentication mocks for each test
-    (authenticateJWT as jest.Mock).mockImplementation((req, res, next) => {
-      req.user = { userId: 123, email: 'test@example.com', role: 'athlete' };
-      next();
+// Helper function to generate JWT token
+function generateToken(userId: number, email: string, role: string) {
+  return jwt.sign(
+    { userId, email, role },
+    process.env.JWT_SECRET || 'oneshot_dev_secret_key',
+    { expiresIn: '1h' }
+  );
+}
+
+describe('Media Routes - Edit & Delete', () => {
+  let athleteUser: any;
+  let adminUser: any;
+  let otherUser: any;
+  let athleteProfile: any;
+  let videoMediaItem: any;
+  let imageMediaItem: any;
+  let pdfMediaItem: any;
+
+  beforeEach(async () => {
+    await cleanupTestDatabase();
+
+    // Create test users
+    athleteUser = await createTestUser({ role: 'athlete' });
+    adminUser = await createTestUser({ role: 'admin' });
+    otherUser = await createTestUser({ role: 'athlete' });
+
+    // Create athlete profile
+    athleteProfile = await createTestProfile({ userId: athleteUser.id });
+
+    // Create test media items
+    videoMediaItem = await createTestMediaItem({
+      athleteProfileUserId: athleteUser.id,
+      mediaType: 'highlight_video',
+      title: 'Original Video Title',
+      videoUrl: 'https://youtube.com/watch?v=original'
+    });
+
+    imageMediaItem = await createTestMediaItem({
+      athleteProfileUserId: athleteUser.id,
+      mediaType: 'image',
+      title: 'Original Image Title',
+      imageUrl: '/uploads/profile-photos/test-image.jpg'
+    });
+
+    pdfMediaItem = await createTestMediaItem({
+      athleteProfileUserId: athleteUser.id,
+      mediaType: 'document',
+      title: 'Original PDF Title'
     });
   });
 
-  describe('PATCH /:mediaItemId', () => {
-    test('should update a media item successfully', async () => {
-      const res = await request(app)
-        .patch('/1')
-        .send({ title: 'Updated Media' });
-
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe('Media item updated successfully');
-      expect(res.body.data.title).toBe('Updated Media');
-    });
-
-    test('should reject invalid update payload', async () => {
-      const res = await request(app)
-        .patch('/1')
-        .send({ title: '' }); // Empty title is invalid
-
-      expect(res.status).toBe(400);
-      expect(res.body.success).toBe(false);
-    });
-
-    test('should handle media item not found', async () => {
-      // Mock DB to return empty array (no media found)
-      const mockDb = db as any;
-      mockDb.limit.mockResolvedValueOnce([]);
-
-      const res = await request(app)
-        .patch('/999')
-        .send({ title: 'Updated Media' });
-
-      expect(res.status).toBe(404);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe('Media item not found');
-    });
-
-    test('should handle unauthorized access', async () => {
-      // Mock authentication middleware to simulate unauthorized access
-      (authenticateJWT as jest.Mock).mockImplementation((req, res) => {
-        return res.status(401).json({
-          success: false,
-          message: 'Authentication required'
-        });
-      });
-
-      const res = await request(app)
-        .patch('/1')
-        .send({ title: 'Updated Media' });
-
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe('Authentication required');
-    });
-
-    test('should restrict updates for non-video media types', async () => {
-      const mockDb = db as any;
+  describe('PATCH /api/media/:mediaItemId', () => {
+    it('should successfully update video media title and URL', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
       
-      // Mock a PDF document
-      mockDb.limit.mockResolvedValueOnce([{
-        id: 2,
-        athleteProfileUserId: 123,
-        title: 'PDF Document',
-        mediaType: 'PDF',
-        documentUrl: 'document.pdf',
-      }]);
-      
-      // Try to update URL for PDF (should be ignored)
-      const res = await request(app)
-        .patch('/2')
-        .send({ 
-          title: 'Updated PDF', 
-          url: 'https://example.com/new.pdf' 
-        });
+      const updateData = {
+        title: 'Updated Video Title',
+        url: 'https://youtube.com/watch?v=updated'
+      };
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      // Only title should be updated, not URL
-      expect(res.body.data.title).toBe('Updated PDF');
+      const response = await request(app)
+        .patch(`/api/media/${videoMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Media item updated successfully');
+      expect(response.body.data.title).toBe(updateData.title);
+      expect(response.body.data.videoUrl).toBe(updateData.url);
+    });
+
+    it('should successfully update PDF title only', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
+      
+      const updateData = {
+        title: 'Updated PDF Title'
+      };
+
+      const response = await request(app)
+        .patch(`/api/media/${pdfMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.title).toBe(updateData.title);
+    });
+
+    it('should successfully update image title only', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
+      
+      const updateData = {
+        title: 'Updated Image Title'
+      };
+
+      const response = await request(app)
+        .patch(`/api/media/${imageMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.title).toBe(updateData.title);
+    });
+
+    it('should allow admin to update any media item', async () => {
+      const token = generateToken(adminUser.id, adminUser.email, adminUser.role);
+      
+      const updateData = {
+        title: 'Admin Updated Title'
+      };
+
+      const response = await request(app)
+        .patch(`/api/media/${videoMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.title).toBe(updateData.title);
+    });
+
+    it('should reject invalid update payload', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
+      
+      const invalidData = {
+        title: '', // Empty title should be invalid
+        url: 'not-a-valid-url'
+      };
+
+      const response = await request(app)
+        .patch(`/api/media/${videoMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(invalidData)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should reject unauthorized access', async () => {
+      const token = generateToken(otherUser.id, otherUser.email, otherUser.role);
+      
+      const updateData = {
+        title: 'Unauthorized Update'
+      };
+
+      const response = await request(app)
+        .patch(`/api/media/${videoMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateData)
+        .expect(403);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Access denied: You can only access your own data');
+    });
+
+    it('should reject unauthenticated requests', async () => {
+      const updateData = {
+        title: 'Unauthenticated Update'
+      };
+
+      const response = await request(app)
+        .patch(`/api/media/${videoMediaItem.id}`)
+        .send(updateData)
+        .expect(401);
+
+      expect(response.body.message).toBe('Authentication required');
+    });
+
+    it('should return 404 for non-existent media item', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
+      
+      const updateData = {
+        title: 'Update Non-existent'
+      };
+
+      const response = await request(app)
+        .patch('/api/media/99999')
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateData)
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Media item not found');
+    });
+
+    it('should reject invalid media item ID', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
+      
+      const updateData = {
+        title: 'Invalid ID Update'
+      };
+
+      const response = await request(app)
+        .patch('/api/media/invalid-id')
+        .set('Authorization', `Bearer ${token}`)
+        .send(updateData)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
     });
   });
 
-  describe('DELETE /:mediaItemId', () => {
-    test('should delete a media item successfully', async () => {
-      // Mock successful deletion
-      const mockDb = db as any;
-      mockDb.returning.mockResolvedValueOnce([{ id: 1, mediaType: 'image' }]);
+  describe('DELETE /api/media/:mediaItemId', () => {
+    it('should successfully delete video media item', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
 
-      const res = await request(app)
-        .delete('/1');
+      const response = await request(app)
+        .delete(`/api/media/${videoMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe('Media item deleted successfully');
-      // File deletion should have been attempted for image
-      expect(fs.unlink).toHaveBeenCalled();
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Media item deleted successfully');
     });
 
-    test('should handle media item not found', async () => {
-      // Mock DB to return empty array (no media found)
-      const mockDb = db as any;
-      mockDb.limit.mockResolvedValueOnce([]);
+    it('should successfully delete PDF media item', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
 
-      const res = await request(app)
-        .delete('/999');
+      const response = await request(app)
+        .delete(`/api/media/${pdfMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
 
-      expect(res.status).toBe(404);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe('Media item not found');
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Media item deleted successfully');
     });
 
-    test('should handle file deletion failure', async () => {
-      // Mock DB to return a media item
-      const mockDb = db as any;
-      mockDb.limit.mockResolvedValueOnce([{
-        id: 1,
-        athleteProfileUserId: 123,
-        mediaType: 'image',
-        imageUrl: '/uploads/profile-photos/test-image.jpg'
-      }]);
-      
-      // Mock successful DB deletion
-      mockDb.returning.mockResolvedValueOnce([{
-        id: 1,
-        mediaType: 'image'
-      }]);
-      
-      // Mock file deletion failure
-      (fs.access as jest.Mock).mockRejectedValueOnce(new Error('File not found'));
+    it('should successfully delete image media item (file deletion success)', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
 
-      const res = await request(app)
-        .delete('/1');
+      // Create a mock file for testing
+      const uploadsDir = path.join(process.cwd(), 'uploads', 'profile-photos');
+      await fs.mkdir(uploadsDir, { recursive: true });
+      const testFilePath = path.join(uploadsDir, 'test-image.jpg');
+      await fs.writeFile(testFilePath, 'test image content');
 
-      expect(res.status).toBe(207); // Partial success
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe('Media item record deleted, but file deletion failed');
-      expect(res.body.warnings).toContain('Physical file could not be deleted');
+      const response = await request(app)
+        .delete(`/api/media/${imageMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Media item deleted successfully');
+
+      // Verify file was deleted
+      try {
+        await fs.access(testFilePath);
+        fail('File should have been deleted');
+      } catch (error) {
+        // File successfully deleted
+      }
     });
 
-    test('should handle unauthorized access', async () => {
-      // Mock authentication middleware to simulate unauthorized access
-      (authenticateJWT as jest.Mock).mockImplementation((req, res) => {
-        return res.status(401).json({
-          success: false,
-          message: 'Authentication required'
-        });
-      });
+    it('should handle image media item deletion with file deletion failure', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
 
-      const res = await request(app)
-        .delete('/1');
+      // Don't create the file, so deletion will fail
+      const response = await request(app)
+        .delete(`/api/media/${imageMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(207); // 207 Multi-Status for partial success
 
-      expect(res.status).toBe(401);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toBe('Authentication required');
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Media item record deleted, but file deletion failed');
+      expect(response.body.warnings).toContain('Physical file could not be deleted');
     });
 
-    test('should not attempt file deletion for non-image media types', async () => {
-      // Mock a video link media item
-      const mockDb = db as any;
-      mockDb.limit.mockResolvedValueOnce([{
-        id: 3,
-        athleteProfileUserId: 123,
-        mediaType: 'highlight_video',
-        videoUrl: 'https://example.com/video.mp4'
-      }]);
-      
-      // Mock successful DB deletion
-      mockDb.returning.mockResolvedValueOnce([{
-        id: 3,
-        mediaType: 'highlight_video'
-      }]);
+    it('should allow admin to delete any media item', async () => {
+      const token = generateToken(adminUser.id, adminUser.email, adminUser.role);
 
-      const res = await request(app)
-        .delete('/3');
+      const response = await request(app)
+        .delete(`/api/media/${videoMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe('Media item deleted successfully');
-      // File deletion should NOT have been attempted for video
-      expect(fs.unlink).not.toHaveBeenCalled();
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe('Media item deleted successfully');
+    });
+
+    it('should reject unauthorized access', async () => {
+      const token = generateToken(otherUser.id, otherUser.email, otherUser.role);
+
+      const response = await request(app)
+        .delete(`/api/media/${videoMediaItem.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(403);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Access denied: You can only access your own data');
+    });
+
+    it('should reject unauthenticated requests', async () => {
+      const response = await request(app)
+        .delete(`/api/media/${videoMediaItem.id}`)
+        .expect(401);
+
+      expect(response.body.message).toBe('Authentication required');
+    });
+
+    it('should return 404 for non-existent media item', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
+
+      const response = await request(app)
+        .delete('/api/media/99999')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Media item not found');
+    });
+
+    it('should reject invalid media item ID', async () => {
+      const token = generateToken(athleteUser.id, athleteUser.email, athleteUser.role);
+
+      const response = await request(app)
+        .delete('/api/media/invalid-id')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
     });
   });
 }); 

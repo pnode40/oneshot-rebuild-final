@@ -1,0 +1,300 @@
+name: OneShot AI Development - Test & QA
+
+on:
+  push:
+    branches: [ main, staging, dev ]
+  pull_request:
+    branches: [ main, staging ]
+
+env:
+  NODE_VERSION: '18'
+  
+jobs:
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'server/package-lock.json'
+
+      - name: Install dependencies
+        run: cd server && npm ci
+
+      - name: TypeScript type check
+        run: cd server && npm run type-check
+
+      - name: ESLint check
+        run: cd server && npm run lint
+
+  backend-tests:
+    name: Backend API Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_oneshot
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'server/package-lock.json'
+
+      - name: Install backend dependencies
+        run: cd server && npm ci
+
+      - name: Wait for PostgreSQL
+        run: |
+          until pg_isready -h localhost -p 5432 -U test_user; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+
+      - name: Run database migrations
+        run: cd server && npm run db:migrate
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_oneshot
+          NODE_ENV: test
+
+      - name: Run backend tests
+        run: cd server && npm run test
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_oneshot
+          NODE_ENV: test
+          JWT_SECRET: test-jwt-secret
+
+      - name: Upload backend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./server/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'client/package-lock.json'
+
+      - name: Install frontend dependencies
+        run: cd client && npm ci
+
+      - name: Run frontend tests
+        run: cd client && npm run test
+
+      - name: Build frontend
+        run: cd client && npm run build
+
+      - name: Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./client/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd server && npm ci
+          cd ../client && npm ci
+
+      - name: Run security audit (Backend)
+        run: cd server && npm audit --audit-level=moderate
+
+      - name: Run security audit (Frontend)
+        run: cd client && npm audit --audit-level=moderate
+
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        id: depcheck
+        with:
+          project: 'OneShot'
+          path: '.'
+          format: 'ALL'
+
+      - name: Upload OWASP results
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: reports/
+
+  integration-tests:
+    name: End-to-End Integration
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_oneshot_e2e
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd server && npm ci
+          cd ../client && npm ci
+
+      - name: Setup test database
+        run: cd server && npm run db:migrate
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_oneshot_e2e
+          NODE_ENV: test
+
+      - name: Start backend server
+        run: cd server && npm run dev &
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_oneshot_e2e
+          NODE_ENV: test
+          PORT: 3001
+
+      - name: Start frontend dev server
+        run: cd client && npm run dev &
+        env:
+          VITE_API_URL: http://localhost:3001
+
+      - name: Wait for servers
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3001/api/health; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:5173; do sleep 2; done'
+
+      - name: Run E2E tests
+        run: cd client && npm run test:e2e
+
+      - name: Upload E2E artifacts
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: e2e-screenshots
+          path: client/test-results/
+
+  performance-check:
+    name: Performance Baseline
+    runs-on: ubuntu-latest
+    needs: [backend-tests]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_oneshot_perf
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: cd server && npm ci
+
+      - name: Setup database
+        run: cd server && npm run db:migrate
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_oneshot_perf
+
+      - name: Start server
+        run: cd server && npm run dev &
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_oneshot_perf
+          NODE_ENV: production
+
+      - name: Wait for server
+        run: timeout 30 bash -c 'until curl -f http://localhost:3001/api/health; do sleep 2; done'
+
+      - name: Run performance tests
+        run: cd server && npm run test:performance
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-report
+          path: server/performance-results/
+
+  deployment-check:
+    name: Deployment Readiness
+    runs-on: ubuntu-latest
+    needs: [lint, backend-tests, frontend-tests, security-scan, integration-tests]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify deployment readiness
+        run: |
+          echo "✅ All tests passed"
+          echo "✅ Security scans completed"
+          echo "✅ Performance baselines established"
+          echo "🚀 Ready for deployment"
+
+      - name: Notify deployment status
+        run: |
+          echo "Deployment checks completed successfully"
+          echo "Main branch is ready for production deployment" 

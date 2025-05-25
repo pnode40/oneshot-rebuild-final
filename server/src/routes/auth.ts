@@ -8,6 +8,7 @@ import { users } from '../db/schema';
 import rateLimit from 'express-rate-limit';
 import { authenticateJWT } from '../middleware/authMiddleware';
 import { eq } from 'drizzle-orm';
+import realTimeSecurityService from '../services/realTimeSecurityService';
 // For email sending (commented out until we install @sendgrid/mail)
 // import sgMail from '@sendgrid/mail';
 
@@ -183,11 +184,24 @@ async function registerUser(req: Request, res: Response) {
 
 // Login handler
 async function loginUser(req: Request, res: Response) {
+  const startTime = Date.now();
+  const ipAddress = req.ip || req.socket.remoteAddress;
+  const userAgent = req.get('User-Agent');
+  
   try {
     // Validate request body
     const validationResult = loginSchema.safeParse(req.body);
     
     if (!validationResult.success) {
+      // Emit security event for invalid login data
+      await realTimeSecurityService.handleLoginAttempt({
+        email: req.body.email || 'unknown',
+        success: false,
+        failureReason: 'Invalid request format',
+        ipAddress,
+        userAgent
+      });
+      
       return res.status(400).json({ 
         success: false, 
         errors: validationResult.error.errors 
@@ -203,6 +217,15 @@ async function loginUser(req: Request, res: Response) {
       });
 
       if (!user) {
+        // Emit security event for failed login (user not found)
+        await realTimeSecurityService.handleLoginAttempt({
+          email,
+          success: false,
+          failureReason: 'User not found',
+          ipAddress,
+          userAgent
+        });
+        
         return res.status(401).json({ 
           success: false, 
           message: 'Invalid email or password' 
@@ -213,6 +236,16 @@ async function loginUser(req: Request, res: Response) {
       const passwordMatch = await bcrypt.compare(password, user.hashedPassword);
       
       if (!passwordMatch) {
+        // Emit security event for failed login (wrong password)
+        await realTimeSecurityService.handleLoginAttempt({
+          userId: user.id,
+          email,
+          success: false,
+          failureReason: 'Invalid password',
+          ipAddress,
+          userAgent
+        });
+        
         return res.status(401).json({ 
           success: false, 
           message: 'Invalid email or password' 
@@ -229,6 +262,15 @@ async function loginUser(req: Request, res: Response) {
         JWT_SECRET,
         { expiresIn: '7d' }
       );
+      
+      // Emit security event for successful login
+      await realTimeSecurityService.handleLoginAttempt({
+        userId: user.id,
+        email,
+        success: true,
+        ipAddress,
+        userAgent
+      });
       
       // Return success with token (excluding sensitive data)
       res.status(200).json({
@@ -247,6 +289,16 @@ async function loginUser(req: Request, res: Response) {
       
     } catch (error) {
       console.error('Login failed:', error);
+      
+      // Emit security event for system error during login
+      await realTimeSecurityService.handleLoginAttempt({
+        email,
+        success: false,
+        failureReason: 'System error',
+        ipAddress,
+        userAgent
+      });
+      
       res.status(500).json({ 
         success: false, 
         message: 'Failed to process login request' 
@@ -266,6 +318,9 @@ async function loginUser(req: Request, res: Response) {
  * Request a password reset link
  */
 router.post('/request-reset', resetRateLimiter, async (req: Request, res: Response) => {
+  const ipAddress = req.ip || req.socket.remoteAddress;
+  const userAgent = req.get('User-Agent');
+  
   try {
     // Validate request body
     const validationResult = resetRequestSchema.safeParse(req.body);
@@ -310,37 +365,20 @@ router.post('/request-reset', resetRateLimiter, async (req: Request, res: Respon
         .where(eq(users.id, user.id));
       console.log('User updated with reset token');
       
+      // Emit security event for password reset request
+      await realTimeSecurityService.handlePasswordReset({
+        userId: user.id,
+        email: user.email,
+        type: 'request',
+        ipAddress,
+        userAgent
+      });
+      
       // Create reset URL
       const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
       
       // In a real environment, we would send an email here using SendGrid
       console.log(`Reset URL for ${email}: ${resetUrl}`);
-      
-      // Commented out until @sendgrid/mail is installed
-      /*
-      if (process.env.SENDGRID_API_KEY) {
-        const msg = {
-          to: email,
-          from: process.env.SENDGRID_FROM_EMAIL || 'noreply@oneshot.com',
-          subject: 'OneShot Password Reset',
-          text: `You requested a password reset. Please use the following link to reset your password: ${resetUrl}`,
-          html: `
-            <div>
-              <h1>Password Reset</h1>
-              <p>You requested a password reset for your OneShot account.</p>
-              <p>Please click the button below to reset your password:</p>
-              <a href="${resetUrl}" style="display: inline-block; background-color: #4CAF50; color: white; padding: 14px 20px; margin: 8px 0; border: none; cursor: pointer; text-decoration: none;">
-                Reset Password
-              </a>
-              <p>If you did not request this reset, please ignore this email.</p>
-              <p>This link will expire in 1 hour.</p>
-            </div>
-          `
-        };
-        
-        await sgMail.send(msg);
-      }
-      */
       
       return res.status(200).json({
         message: "If this email is registered, you will receive reset instructions shortly.",
@@ -401,6 +439,9 @@ router.get('/reset/:token', async (req: Request, res: Response) => {
  * Reset password using a valid token
  */
 router.post('/reset/:token', async (req: Request, res: Response) => {
+  const ipAddress = req.ip || req.socket.remoteAddress;
+  const userAgent = req.get('User-Agent');
+  
   try {
     const { token } = req.params;
     
@@ -438,6 +479,15 @@ router.post('/reset/:token', async (req: Request, res: Response) => {
         resetTokenExpiry: null
       })
       .where(eq(users.id, user.id));
+    
+    // Emit security event for password reset completion
+    await realTimeSecurityService.handlePasswordReset({
+      userId: user.id,
+      email: user.email,
+      type: 'complete',
+      ipAddress,
+      userAgent
+    });
     
     return res.status(200).json({
       success: true,

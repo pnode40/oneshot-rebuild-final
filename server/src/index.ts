@@ -1,12 +1,20 @@
 // 1. Environment setup
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+
+// Load .env from server directory - fix the path resolution
+dotenv.config({ path: path.join(process.cwd(), 'server', '.env') });
+
+// Temporary fix: Ensure DATABASE_URL is available
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'postgresql://OneShotMay25_owner:npg_OPr6NdBp0QVH@ep-wispy-lab-a5ldd1qu-pooler.us-east-2.aws.neon.tech/OneShotMay25?sslmode=require';
+}
 
 // 2. Core imports
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
 import helmet from 'helmet';
+import http from 'http';
 import { db } from './db/client';
 
 // 3. Route imports
@@ -17,9 +25,19 @@ import uploadRouter from './routes/upload';
 import testRoutes from './routes/testRoutes';
 import athleteProfileRoutes from './routes/athleteProfileRoutes';
 import mediaItemRouter from './routes/mediaItemRoutes';
+import videoLinkRoutes from './routes/videoLinkRoutes';
+import passwordResetRoutes from './routes/passwordResetRoutes';
+import healthRouter from './routes/health';
+import profilePhotoRoutes from './routes/api/profilePhotos';
+import securityDashboardRoutes from './routes/api/securityDashboard';
+import aiSecurityIntelligenceRoutes from './routes/api/aiSecurityIntelligence';
+import notificationRoutes from './routes/api/notifications';
 
-// Experimental track routes
-import videoLinkRoutes from '../oneshot-experimental/src/routes/videoLinkRoutes';
+// 4. Real-time security imports
+import SocketServerManager from './websocket/socketServer';
+import realTimeSecurityService from './services/realTimeSecurityService';
+import aiSecurityIntelligence from './services/aiSecurityIntelligence';
+import notificationService from './services/notificationService';
 
 // 4. Initialize Express
 const app = express();
@@ -59,9 +77,13 @@ app.use('/api/upload', uploadRouter);
 app.use('/api', testRoutes);
 app.use('/api/athlete-profile', athleteProfileRoutes);
 app.use('/api/media', mediaItemRouter);
-
-// Experimental track routes
-app.use('/api/experimental/athlete', videoLinkRoutes);
+app.use('/api/athlete', videoLinkRoutes);
+app.use('/api/auth', passwordResetRoutes);
+app.use('/api/health', healthRouter);
+app.use('/api/profile-photos', profilePhotoRoutes);
+app.use('/api/security-dashboard', securityDashboardRoutes);
+app.use('/api/ai-security', aiSecurityIntelligenceRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 8. Test route
 import { positionEnum, athleteRoleEnum, profiles } from './db/schema';
@@ -77,6 +99,10 @@ app.get('/test-insert', async (req, res) => {
       userId: 1, // Associate with the first user in the database
       positionPrimary: 'QB' as const, // Use literal string that matches the enum
       athleteRole: athleteRoleEnum.enumValues[0], // Use 'high_school' from the enum values
+      
+      // Required fields for schema validation
+      firstName: "Test",
+      lastName: "Athlete", 
       
       // Optional fields that are properly typed
       highSchoolName: "Test High School",
@@ -133,6 +159,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 // 10. Database connection test
 async function testConnection() {
   try {
+    console.log('DATABASE_URL being used:', process.env.DATABASE_URL);
     console.log('Attempting to query profiles...');
     const result = await db.query.profiles.findMany();
     console.log('Fetched profiles (indicates connection success):', result);
@@ -141,9 +168,42 @@ async function testConnection() {
   }
 }
 
-// 11. Start server
-app.listen(PORT, () => {
+// 11. Start server with WebSocket support
+const server = http.createServer(app);
+
+// Initialize WebSocket server
+const socketManager = new SocketServerManager(server);
+
+// Connect real-time security service to WebSocket server
+realTimeSecurityService.setSocketManager(socketManager);
+
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`WebSocket server initialized for real-time security monitoring`);
   console.log(`File upload test page available at: http://localhost:${PORT}/upload-test.html`);
   testConnection();
 });
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  realTimeSecurityService.destroy();
+  notificationService.destroy();
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  realTimeSecurityService.destroy();
+  notificationService.destroy();
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+// Export app and server for testing
+export { app, server, socketManager, realTimeSecurityService };

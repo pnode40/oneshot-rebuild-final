@@ -11,6 +11,24 @@ export enum UserRole {
 }
 
 /**
+ * Authenticated user object structure attached to Express requests
+ */
+export interface AuthenticatedUser {
+  userId: number;
+  email: string;
+  role: 'athlete' | 'recruiter' | 'admin' | 'parent';
+}
+
+/** * Express Request interface augmentation to include authenticated user * Extending the existing User interface to avoid conflicts */declare global {  namespace Express {    interface User extends AuthenticatedUser {}  }}
+
+/**
+ * Type alias for Express requests with guaranteed authenticated user
+ */
+export interface AuthRequest extends Express.Request {
+  user: AuthenticatedUser;
+}
+
+/**
  * Athlete role enum type matching the database enum
  */
 export enum AthleteRole {
