@@ -185,4 +185,53 @@ router.get('/check-slug/:slug', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /by-user
+ * Get the athlete profile for the currently authenticated user
+ * This is used by the frontend to get the athlete profile ID
+ */
+router.get('/by-user', authenticateJWT, async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Authentication required' 
+      });
+    }
+    
+    const user = getAuthUser(req);
+    
+    // First, try to get the athlete profile by user ID
+    const profile = await db.query.athleteProfiles.findFirst({
+      where: eq(athleteProfiles.userId, user.userId),
+      columns: {
+        userId: true,
+        firstName: true,
+        lastName: true,
+        sport: true,
+        primaryPosition: true,
+        secondaryPosition: true,
+        graduationYear: true,
+      }
+    });
+    
+    if (!profile) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'No athlete profile found for this user' 
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        id: profile.userId, // Use userId as the id for frontend compatibility
+        ...profile
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router; 

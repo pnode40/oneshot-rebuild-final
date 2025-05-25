@@ -1,15 +1,44 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
-import { FaChartLine, FaHome } from 'react-icons/fa';
+import { FaChartLine, FaHome, FaShieldAlt, FaUser } from 'react-icons/fa';
+import { MdDashboard } from 'react-icons/md';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const [athleteProfileId, setAthleteProfileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch the athlete profile for the current user
+    const fetchAthleteProfile = async () => {
+      if (isAuthenticated && user?.id) {
+        try {
+          const response = await fetch('/api/athlete-profile/by-user', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('oneshot_auth_token')}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data?.id) {
+              setAthleteProfileId(data.data.id);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching athlete profile:', error);
+        }
+      }
+    };
+
+    fetchAthleteProfile();
+  }, [isAuthenticated, user]);
 
   return (
-    <header className="sticky top-0 bg-white border-b py-4 px-6 flex justify-between items-center shadow-sm">
+    <header className="sticky top-0 bg-white border-b py-4 px-6 flex justify-between items-center shadow-sm z-50">
       <div className="text-xl font-bold">
-        <Link to="/">OneShot</Link>
+        <Link to="/" className="text-blue-600 hover:text-blue-700">OneShot</Link>
       </div>
       
       {isAuthenticated && (
@@ -18,15 +47,31 @@ const Header: React.FC = () => {
             to="/" 
             className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
           >
-            <FaHome className="h-4 w-4 mr-1" />
-            Profile
+            <MdDashboard className="h-4 w-4 mr-1" />
+            Dashboard
           </Link>
+          {athleteProfileId && (
+            <Link 
+              to={`/profile-management/${athleteProfileId}`} 
+              className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              <FaUser className="h-4 w-4 mr-1" />
+              Profile
+            </Link>
+          )}
           <Link 
             to="/analytics" 
             className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
           >
             <FaChartLine className="h-4 w-4 mr-1" />
             Analytics
+          </Link>
+          <Link 
+            to="/security" 
+            className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            <FaShieldAlt className="h-4 w-4 mr-1" />
+            Security
           </Link>
         </nav>
       )}
@@ -39,7 +84,7 @@ const Header: React.FC = () => {
             </span>
             <button 
               onClick={logout}
-              className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md"
+              className="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-md transition-colors"
             >
               Logout
             </button>

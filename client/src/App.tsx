@@ -17,6 +17,9 @@ import { useAuth } from './context/useAuth';
 import { TestAuthProvider } from './context/TestAuthContext';
 import { ProfileData } from './types'; // Import shared type
 import './App.css';
+import HomePage from './components/HomePage';
+import SecurityDashboard from './components/SecurityDashboard';
+import CreateAthleteProfile from './components/CreateAthleteProfile';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -239,6 +242,16 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
           path="/" 
           element={
             <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Old profile form route - kept for legacy access */}
+        <Route 
+          path="/legacy-profile-form" 
+          element={
+            <ProtectedRoute>
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="md:w-1/2">
                   <ProfileInfoForm
@@ -253,7 +266,7 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
             </ProtectedRoute>
           } 
         />
-
+        
         {/* Redirect /home to / */}
         <Route path="/home" element={<Navigate to="/" replace />} />
         
@@ -292,6 +305,16 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
           element={
             <ProtectedRoute>
               <AnalyticsDashboard userRole="athlete" />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Security Dashboard */}
+        <Route 
+          path="/security" 
+          element={
+            <ProtectedRoute>
+              <SecurityDashboard />
             </ProtectedRoute>
           } 
         />
@@ -346,6 +369,16 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
                 </div>
               </div>
             </TestAuthProvider>
+          } 
+        />
+        
+        {/* Create Athlete Profile */}
+        <Route 
+          path="/create-profile" 
+          element={
+            <ProtectedRoute>
+              <CreateAthleteProfile />
+            </ProtectedRoute>
           } 
         />
         

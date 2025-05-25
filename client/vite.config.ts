@@ -7,6 +7,8 @@ export default defineConfig({
     react(),
   ],
   server: {
+    port: 5173,
+    host: 'localhost',
     proxy: {
       "/api": {
         target: "http://localhost:3001",
@@ -15,4 +17,15 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 5173,
+    host: 'localhost',
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: './index.html'
+      }
+    }
+  }
 })
