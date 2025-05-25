@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { validateRequest } from '../../middleware/validationMiddleware';
-import { authenticateJWT, requireAdmin } from '../../middleware/authMiddleware';
+import { authenticateJWT } from '../../middleware/authMiddleware';
+import { requireAdmin } from '../../middleware/rbacMiddleware';
 import { successResponse, errorResponse } from '../../utils/responses';
 import {
   getSecurityDashboardMetrics,

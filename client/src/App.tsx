@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
 import ProfileInfoForm from './components/ProfileInfoForm';
 import ProfilePreview from './components/ProfilePreview';
 import PublicProfilePage from './pages/PublicProfilePage';
+import PublicProfileEnhanced from './components/PublicProfileEnhanced';
 import EnhancedProfileTestPage from './pages/EnhancedProfileTestPage';
 import Login from './components/Login';
 import Register from './components/Register';
 import Layout from './components/Layout';
+import { AnalyticsDashboard } from './components/admin';
+import { EnhancedProfileDashboard, ProfileAnalyticsDashboard } from './components/profile';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/useAuth';
 import { TestAuthProvider } from './context/TestAuthContext';
@@ -253,11 +257,54 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
         {/* Redirect /home to / */}
         <Route path="/home" element={<Navigate to="/" replace />} />
         
-        {/* Public profile route */}
-        <Route path="/profile/:slug" element={<PublicProfilePage />} />
+        {/* Enhanced Public Profile Route */}
+        <Route path="/profile/:slug" element={<PublicProfileEnhanced />} />
+        
+        {/* Legacy Public Profile Route */}
+        <Route path="/profile-legacy/:slug" element={<PublicProfilePage />} />
         
         {/* Enhanced Profile Test Page - Priority #1 Features */}
         <Route path="/enhanced-profile-test" element={<EnhancedProfileTestPage />} />
+        
+        {/* Enhanced Profile Management Dashboard */}
+        <Route 
+          path="/profile-management/:athleteProfileId" 
+          element={
+            <ProtectedRoute>
+              <EnhancedProfileDashboardWrapper />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Profile Analytics Dashboard */}
+        <Route 
+          path="/profile-analytics/:slug" 
+          element={
+            <ProtectedRoute>
+              <ProfileAnalyticsDashboardWrapper />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Analytics Dashboard */}
+        <Route 
+          path="/analytics" 
+          element={
+            <ProtectedRoute>
+              <AnalyticsDashboard userRole="athlete" />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Admin Analytics Dashboard */}
+        <Route 
+          path="/admin/analytics" 
+          element={
+            <ProtectedRoute>
+              <AnalyticsDashboard userRole="admin" />
+            </ProtectedRoute>
+          } 
+        />
         
         {/* Original test component route */}
         <Route 
@@ -309,13 +356,46 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
   );
 };
 
+// Wrapper component to extract URL params for Enhanced Profile Dashboard
+const EnhancedProfileDashboardWrapper: React.FC = () => {
+  const { athleteProfileId } = useParams<{ athleteProfileId: string }>();
+  
+  if (!athleteProfileId) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return (
+    <EnhancedProfileDashboard 
+      athleteProfileId={athleteProfileId} 
+      isOwner={true} 
+    />
+  );
+};
+
+// Wrapper component for Profile Analytics Dashboard
+const ProfileAnalyticsDashboardWrapper: React.FC = () => {
+  const { slug } = useParams<{ slug: string }>();
+  
+  if (!slug) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return (
+    <div className="max-w-7xl mx-auto p-6">
+      <ProfileAnalyticsDashboard profileSlug={slug} />
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <AppAuthContainer />
-      </Router>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <AppAuthContainer />
+        </Router>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 };
 

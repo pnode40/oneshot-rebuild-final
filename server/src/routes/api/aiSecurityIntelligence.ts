@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { authenticateJWT, requireAdmin } from '../../middleware/authMiddleware';
+import { authenticateJWT } from '../../middleware/authMiddleware';
+import { requireAdmin } from '../../middleware/rbacMiddleware';
 import aiSecurityIntelligence from '../../services/aiSecurityIntelligence';
 
 const router = Router();

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import { FaChartLine, FaHome } from 'react-icons/fa';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
@@ -10,6 +11,26 @@ const Header: React.FC = () => {
       <div className="text-xl font-bold">
         <Link to="/">OneShot</Link>
       </div>
+      
+      {isAuthenticated && (
+        <nav className="flex items-center space-x-6">
+          <Link 
+            to="/" 
+            className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            <FaHome className="h-4 w-4 mr-1" />
+            Profile
+          </Link>
+          <Link 
+            to="/analytics" 
+            className="flex items-center text-sm text-gray-600 hover:text-blue-600 transition-colors"
+          >
+            <FaChartLine className="h-4 w-4 mr-1" />
+            Analytics
+          </Link>
+        </nav>
+      )}
+      
       <div className="flex items-center gap-4">
         {isAuthenticated ? (
           <>

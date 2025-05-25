@@ -32,6 +32,8 @@ import profilePhotoRoutes from './routes/api/profilePhotos';
 import securityDashboardRoutes from './routes/api/securityDashboard';
 import aiSecurityIntelligenceRoutes from './routes/api/aiSecurityIntelligence';
 import notificationRoutes from './routes/api/notifications';
+import analyticsRoutes from './routes/api/analytics';
+import profileAnalyticsRoutes from './routes/api/profileAnalytics';
 
 // 4. Real-time security imports
 import SocketServerManager from './websocket/socketServer';
@@ -84,6 +86,8 @@ app.use('/api/profile-photos', profilePhotoRoutes);
 app.use('/api/security-dashboard', securityDashboardRoutes);
 app.use('/api/ai-security', aiSecurityIntelligenceRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/v1/analytics', profileAnalyticsRoutes);
 
 // 8. Test route
 import { positionEnum, athleteRoleEnum, profiles } from './db/schema';
