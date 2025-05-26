@@ -1,32 +1,24 @@
-Write-Host "🚀 Starting OneShot Application..." -ForegroundColor Green
+# Simple OneShot Startup Script
+# No emojis, no fancy features, just start the servers
 
-# Kill any existing Node processes
-Write-Host "🧹 Cleaning up existing processes..." -ForegroundColor Yellow
-Get-Process -Name "node" -ErrorAction SilentlyContinue | Stop-Process -Force
+# Kill existing node processes
+Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
 
-# Clear Vite cache
-Write-Host "🗑️ Clearing Vite cache..." -ForegroundColor Yellow
-Remove-Item -Recurse -Force "client\node_modules\.vite" -ErrorAction SilentlyContinue
+# Set environment variables
+$env:DATABASE_URL = "postgresql://OneShotMay25_owner:npg_OPr6NdBp0QVH@ep-wispy-lab-a5ldd1qu-pooler.us-east-2.aws.neon.tech/OneShotMay25?sslmode=require"
+$env:JWT_SECRET = "oneshot_dev_secret_key"
+$env:NODE_ENV = "development"
+$env:FRONTEND_URL = "http://localhost:5173"
 
-# Wait a moment for cleanup
-Start-Sleep -Seconds 2
+# Start backend in new window
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd server; npm run dev"
 
-# Start backend
-Write-Host "🔧 Starting backend server..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD\server'; npm run dev" -WindowStyle Normal
+# Wait a bit
+Start-Sleep -Seconds 3
 
-# Wait for backend to start
-Write-Host "⏳ Waiting for backend to initialize..." -ForegroundColor Yellow
-Start-Sleep -Seconds 5
+# Start frontend in new window
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd client; npm run dev"
 
-# Start frontend
-Write-Host "🎨 Starting frontend..." -ForegroundColor Magenta
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD\client'; npx vite --host 127.0.0.1 --port 5173" -WindowStyle Normal
-
-Write-Host ""
-Write-Host "✅ OneShot is starting up!" -ForegroundColor Green
-Write-Host "📱 Frontend: http://localhost:5173" -ForegroundColor White
-Write-Host "🔧 Backend: http://localhost:3001" -ForegroundColor White
-Write-Host ""
-Write-Host "Two PowerShell windows will open - one for each server"
-Write-Host "Close those windows to stop the servers" 
+Write-Host "Servers starting..."
+Write-Host "Backend: http://localhost:3001"
+Write-Host "Frontend: http://localhost:5173" 

@@ -1,120 +1,74 @@
 #!/usr/bin/env pwsh
-# OneShot Reliable Startup Script
-# This script ensures a clean startup every time
+# OneShot Development Environment Startup Script
+# This script ensures clean startup of both backend and frontend servers
 
-Write-Host "Starting OneShot Application..." -ForegroundColor Green
-Write-Host "=================================" -ForegroundColor Green
+Write-Host "[>] Starting OneShot Development Environment..." -ForegroundColor Cyan
 
 # Step 1: Kill any existing Node processes
-Write-Host "Cleaning up existing processes..." -ForegroundColor Yellow
-try {
-    taskkill /F /IM node.exe /T 2>$null
-    Write-Host "Existing Node processes terminated" -ForegroundColor Green
-} catch {
-    Write-Host "No existing Node processes found" -ForegroundColor Blue
+Write-Host "`n[*] Cleaning up existing processes..." -ForegroundColor Yellow
+Stop-Process -Name node -Force -ErrorAction SilentlyContinue
+Start-Sleep -Seconds 2
+
+# Step 2: Verify ports are free
+Write-Host "`n[?] Checking port availability..." -ForegroundColor Yellow
+$port3001 = netstat -an | findstr :3001 | findstr LISTENING
+$port5173 = netstat -an | findstr :5173 | findstr LISTENING
+
+if ($port3001) {
+    Write-Host "[X] Port 3001 is still in use. Waiting..." -ForegroundColor Red
+    Start-Sleep -Seconds 3
 }
 
-# Step 2: Clear Vite cache
-Write-Host "Clearing Vite cache..." -ForegroundColor Yellow
-if (Test-Path "client/node_modules/.vite") {
-    Remove-Item -Recurse -Force "client/node_modules/.vite" -ErrorAction SilentlyContinue
-    Write-Host "Vite cache cleared" -ForegroundColor Green
-} else {
-    Write-Host "No Vite cache to clear" -ForegroundColor Blue
+if ($port5173) {
+    Write-Host "[X] Port 5173 is still in use. Waiting..." -ForegroundColor Red
+    Start-Sleep -Seconds 3
 }
 
-# Step 3: Start Backend Server
-Write-Host "Starting Backend Server (Port 3001)..." -ForegroundColor Yellow
-$backendJob = Start-Job -ScriptBlock {
-    Set-Location "C:\OneShotLocal\server"
-    npm run dev
-}
+# Step 3: Set environment variables
+Write-Host "`n[*] Setting environment variables..." -ForegroundColor Yellow
+$env:DATABASE_URL = "postgresql://OneShotMay25_owner:npg_OPr6NdBp0QVH@ep-wispy-lab-a5ldd1qu-pooler.us-east-2.aws.neon.tech/OneShotMay25?sslmode=require"
+$env:JWT_SECRET = "oneshot_dev_secret_key"
+$env:NODE_ENV = "development"
+$env:FRONTEND_URL = "http://localhost:5173"
 
-# Wait for backend to start
-Start-Sleep -Seconds 8
+# Step 4: Start Backend Server
+Write-Host "`n[+] Starting Backend Server (Port 3001)..." -ForegroundColor Green
+$backend = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd server; npm run dev" -PassThru
 
-# Check if backend is running
-try {
-    $healthCheck = Invoke-WebRequest -Uri "http://localhost:3001/api/health" -Method GET -TimeoutSec 5
-    if ($healthCheck.StatusCode -eq 200) {
-        Write-Host "Backend Server running on http://localhost:3001" -ForegroundColor Green
-    }
-} catch {
-    Write-Host "Backend Server failed to start" -ForegroundColor Red
-    Write-Host "Backend Job Output:" -ForegroundColor Yellow
-    Receive-Job $backendJob
-    exit 1
-}
+# Step 5: Wait for backend to be ready
+Write-Host "[~] Waiting for backend to start..." -ForegroundColor Yellow
+Start-Sleep -Seconds 5
 
-# Step 4: Start Frontend Server
-Write-Host "Starting Frontend Server (Port 5173)..." -ForegroundColor Yellow
-$frontendJob = Start-Job -ScriptBlock {
-    Set-Location "C:\OneShotLocal\client"
-    npx vite --host 0.0.0.0 --port 5173 --force
-}
+# Step 6: Start Frontend Server
+Write-Host "`n[+] Starting Frontend Server (Port 5173)..." -ForegroundColor Green
+$frontend = Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd client; npm run dev" -PassThru
 
-# Wait for frontend to start
-Start-Sleep -Seconds 8
+# Step 7: Display status
+Write-Host "`n[OK] OneShot Development Environment Started!" -ForegroundColor Green
+Write-Host "`n[i] Server Status:" -ForegroundColor Cyan
+Write-Host "   Backend:  http://localhost:3001" -ForegroundColor White
+Write-Host "   Frontend: http://localhost:5173" -ForegroundColor White
+Write-Host "`n[!] Press Ctrl+C to stop all servers" -ForegroundColor Yellow
 
-# Check if frontend is running
-try {
-    $frontendCheck = Invoke-WebRequest -Uri "http://localhost:5173" -Method GET -TimeoutSec 5
-    if ($frontendCheck.StatusCode -eq 200) {
-        Write-Host "Frontend Server running on http://localhost:5173" -ForegroundColor Green
-    }
-} catch {
-    Write-Host "Frontend Server failed to start" -ForegroundColor Red
-    Write-Host "Frontend Job Output:" -ForegroundColor Yellow
-    Receive-Job $frontendJob
-    exit 1
-}
+# Step 8: Monitor processes
+Write-Host "`n[*] Monitoring processes (PID: Backend=$($backend.Id), Frontend=$($frontend.Id))..." -ForegroundColor Cyan
 
-# Step 5: Final Status Check
-Write-Host "" -ForegroundColor White
-Write-Host "OneShot Application Started Successfully!" -ForegroundColor Green
-Write-Host "=================================" -ForegroundColor Green
-Write-Host "Backend:  http://localhost:3001" -ForegroundColor Cyan
-Write-Host "Frontend: http://localhost:5173" -ForegroundColor Cyan
-Write-Host "Health:   http://localhost:3001/api/health" -ForegroundColor Cyan
-Write-Host "" -ForegroundColor White
-Write-Host "Press Ctrl+C to stop all servers" -ForegroundColor Yellow
-
-# Keep script running and monitor
+# Keep script running and handle cleanup on exit
 try {
     while ($true) {
-        Start-Sleep -Seconds 30
+        Start-Sleep -Seconds 1
         
-        # Check backend health
-        try {
-            Invoke-WebRequest -Uri "http://localhost:3001/api/health" -Method GET -TimeoutSec 3 | Out-Null
-        } catch {
-            Write-Host "Backend health check failed - restarting..." -ForegroundColor Red
-            Stop-Job $backendJob -Force
-            $backendJob = Start-Job -ScriptBlock {
-                Set-Location "C:\OneShotLocal\server"
-                npm run dev
-            }
-        }
-        
-        # Check frontend health
-        try {
-            Invoke-WebRequest -Uri "http://localhost:5173" -Method GET -TimeoutSec 3 | Out-Null
-        } catch {
-            Write-Host "Frontend health check failed - restarting..." -ForegroundColor Red
-            Stop-Job $frontendJob -Force
-            $frontendJob = Start-Job -ScriptBlock {
-                Set-Location "C:\OneShotLocal\client"
-                npx vite --host 0.0.0.0 --port 5173 --force
-            }
+        # Check if processes are still running
+        if ($backend.HasExited -or $frontend.HasExited) {
+            Write-Host "`n[!] A server has stopped unexpectedly!" -ForegroundColor Red
+            break
         }
     }
 } finally {
     # Cleanup on exit
-    Write-Host "Stopping OneShot Application..." -ForegroundColor Red
-    Stop-Job $backendJob -Force
-    Stop-Job $frontendJob -Force
-    Remove-Job $backendJob -Force
-    Remove-Job $frontendJob -Force
-    taskkill /F /IM node.exe /T 2>$null
-    Write-Host "OneShot Application stopped" -ForegroundColor Green
+    Write-Host "`n[X] Shutting down servers..." -ForegroundColor Yellow
+    Stop-Process -Id $backend.Id -Force -ErrorAction SilentlyContinue
+    Stop-Process -Id $frontend.Id -Force -ErrorAction SilentlyContinue
+    Stop-Process -Name node -Force -ErrorAction SilentlyContinue
+    Write-Host "[OK] Cleanup complete!" -ForegroundColor Green
 } 
