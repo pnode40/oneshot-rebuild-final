@@ -7,15 +7,21 @@ import { getToken } from '../services/api';
 import { Link } from 'react-router-dom';
 import { FaPencilAlt } from 'react-icons/fa';
 
+// Configure axios base URL
+const API_BASE_URL = 'http://localhost:3001';
+
 const profileSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  fullName: z.string().min(1, "Name is required"),
   highSchool: z.string().min(1, "High school is required"),
   position: z.string().min(1, "Position is required"),
-  height: z.string().min(1, "Height is required"),
-  weight: z.coerce.number().min(1, "Weight is required"),
-  gpa: z.coerce.number().min(0).max(4.0).optional(),
-  highlightLinks: z.string().optional(),
-  visibility: z.enum(["public", "private"]).default("private")
+  heightFt: z.string().min(1, "Height feet is required"),
+  heightIn: z.string().min(1, "Height inches is required"),
+  weight: z.string().min(1, "Weight is required"),
+  email: z.string().email("Valid email is required"),
+  gradYear: z.string().optional(),
+  cityState: z.string().optional(),
+  gpa: z.string().optional(),
+  highlightVideoUrl: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -42,14 +48,17 @@ const SectionHeading = ({ children }: { children: React.ReactNode }) => (
 export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps) {
   const { user } = useAuth();
   const [formData, setFormData] = useState<ProfileFormData>({
-    name: '',
+    fullName: '',
+    email: user?.email || '',
     highSchool: '',
     position: '',
-    height: '',
-    weight: 0,
-    gpa: undefined,
-    highlightLinks: '',
-    visibility: 'private'
+    heightFt: '',
+    heightIn: '',
+    weight: '',
+    gradYear: '',
+    cityState: '',
+    gpa: '',
+    highlightVideoUrl: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [hasProfile, setHasProfile] = useState(false);
@@ -61,7 +70,7 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
         const token = getToken();
         if (!token) return;
 
-        const response = await axios.get('/api/profile/me', {
+        const response = await axios.get(`${API_BASE_URL}/api/profile/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -80,6 +89,8 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
 
     if (user) {
       checkProfile();
+      // Set email from user context
+      setFormData(prev => ({ ...prev, email: user.email || '' }));
     }
   }, [user]);
 
@@ -92,7 +103,7 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
       }
 
       try {
-        const response = await axios.post('/api/profile', validatedData, {
+        const response = await axios.post(`${API_BASE_URL}/api/profile`, validatedData, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -114,14 +125,17 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
     onSuccess: () => {
       // Reset form after successful submission
       setFormData({
-        name: '',
+        fullName: '',
+        email: user?.email || '',
         highSchool: '',
         position: '',
-        height: '',
-        weight: 0,
-        gpa: undefined,
-        highlightLinks: '',
-        visibility: 'private'
+        heightFt: '',
+        heightIn: '',
+        weight: '',
+        gradYear: '',
+        cityState: '',
+        gpa: '',
+        highlightVideoUrl: ''
       });
       
       // Call onSuccess callback if provided
@@ -219,21 +233,43 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
             <SectionHeading>Personal Information</SectionHeading>
 
             <div>
-              <InputLabel htmlFor="name">
-                Name *
+              <InputLabel htmlFor="fullName">
+                Full Name *
               </InputLabel>
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={formData.name}
+                id="fullName"
+                name="fullName"
+                value={formData.fullName}
                 onChange={handleChange}
                 className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
-                  errors.name ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                  errors.fullName ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
               />
-              {errors.name && (
-                <p className="mt-1 text-sm text-[#ff6b35]">{errors.name}</p>
+              {errors.fullName && (
+                <p className="mt-1 text-sm text-[#ff6b35]">{errors.fullName}</p>
+              )}
+            </div>
+
+            <div>
+              <InputLabel htmlFor="email">
+                Email *
+              </InputLabel>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                disabled={!!user?.email}
+                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                  errors.email ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff] ${
+                  user?.email ? 'bg-gray-100 cursor-not-allowed' : ''
+                }`}
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-[#ff6b35]">{errors.email}</p>
               )}
             </div>
 
@@ -255,6 +291,21 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
                 <p className="mt-1 text-sm text-[#ff6b35]">{errors.highSchool}</p>
               )}
             </div>
+
+            <div>
+              <InputLabel htmlFor="cityState">
+                City, State
+              </InputLabel>
+              <input
+                type="text"
+                id="cityState"
+                name="cityState"
+                placeholder="e.g., Dallas, TX"
+                value={formData.cityState}
+                onChange={handleChange}
+                className="mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
+              />
+            </div>
           </div>
 
           {/* Athletic Stats Section */}
@@ -265,8 +316,7 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
               <InputLabel htmlFor="position">
                 Position *
               </InputLabel>
-              <input
-                type="text"
+              <select
                 id="position"
                 name="position"
                 value={formData.position}
@@ -274,30 +324,66 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
                 className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
                   errors.position ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
                 } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
-              />
+              >
+                <option value="">Select a position</option>
+                <option value="QB">QB - Quarterback</option>
+                <option value="RB">RB - Running Back</option>
+                <option value="WR">WR - Wide Receiver</option>
+                <option value="TE">TE - Tight End</option>
+                <option value="OL">OL - Offensive Line</option>
+                <option value="DL">DL - Defensive Line</option>
+                <option value="LB">LB - Linebacker</option>
+                <option value="DB">DB - Defensive Back</option>
+                <option value="K">K - Kicker</option>
+                <option value="P">P - Punter</option>
+                <option value="LS">LS - Long Snapper</option>
+                <option value="ATH">ATH - Athlete</option>
+              </select>
               {errors.position && (
                 <p className="mt-1 text-sm text-[#ff6b35]">{errors.position}</p>
               )}
             </div>
 
-            <div>
-              <InputLabel htmlFor="height">
-                Height *
-              </InputLabel>
-              <input
-                type="text"
-                id="height"
-                name="height"
-                placeholder="e.g., 6'2&quot; or 188 cm"
-                value={formData.height}
-                onChange={handleChange}
-                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
-                  errors.height ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
-              />
-              {errors.height && (
-                <p className="mt-1 text-sm text-[#ff6b35]">{errors.height}</p>
-              )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <InputLabel htmlFor="heightFt">
+                  Height (ft) *
+                </InputLabel>
+                <input
+                  type="text"
+                  id="heightFt"
+                  name="heightFt"
+                  placeholder="6"
+                  value={formData.heightFt}
+                  onChange={handleChange}
+                  className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                    errors.heightFt ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
+                />
+                {errors.heightFt && (
+                  <p className="mt-1 text-sm text-[#ff6b35]">{errors.heightFt}</p>
+                )}
+              </div>
+
+              <div>
+                <InputLabel htmlFor="heightIn">
+                  Height (in) *
+                </InputLabel>
+                <input
+                  type="text"
+                  id="heightIn"
+                  name="heightIn"
+                  placeholder="2"
+                  value={formData.heightIn}
+                  onChange={handleChange}
+                  className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
+                    errors.heightIn ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
+                />
+                {errors.heightIn && (
+                  <p className="mt-1 text-sm text-[#ff6b35]">{errors.heightIn}</p>
+                )}
+              </div>
             </div>
 
             <div>
@@ -305,10 +391,10 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
                 Weight (lbs) *
               </InputLabel>
               <input
-                type="number"
+                type="text"
                 id="weight"
                 name="weight"
-                value={formData.weight || ''}
+                value={formData.weight}
                 onChange={handleChange}
                 className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
                   errors.weight ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
@@ -320,17 +406,30 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
             </div>
 
             <div>
+              <InputLabel htmlFor="gradYear">
+                Graduation Year
+              </InputLabel>
+              <input
+                type="text"
+                id="gradYear"
+                name="gradYear"
+                placeholder="2026"
+                value={formData.gradYear}
+                onChange={handleChange}
+                className="mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
+              />
+            </div>
+
+            <div>
               <InputLabel htmlFor="gpa">
                 GPA (Optional)
               </InputLabel>
               <input
-                type="number"
+                type="text"
                 id="gpa"
                 name="gpa"
-                step="0.01"
-                min="0"
-                max="4.0"
-                value={formData.gpa || ''}
+                placeholder="3.5"
+                value={formData.gpa}
                 onChange={handleChange}
                 className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
                   errors.gpa ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
@@ -347,42 +446,18 @@ export default function CreateProfileForm({ onSuccess }: CreateProfileFormProps)
             <SectionHeading>Additional Information</SectionHeading>
 
             <div>
-              <InputLabel htmlFor="highlightLinks">
-                Highlight Links (Optional)
+              <InputLabel htmlFor="highlightVideoUrl">
+                Highlight Video URL (Optional)
               </InputLabel>
-              <textarea
-                id="highlightLinks"
-                name="highlightLinks"
-                rows={3}
-                value={formData.highlightLinks}
+              <input
+                type="text"
+                id="highlightVideoUrl"
+                name="highlightVideoUrl"
+                value={formData.highlightVideoUrl}
                 onChange={handleChange}
-                placeholder="https://example.com/highlights, https://youtube.com/watch?v=..."
-                className={`mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border ${
-                  errors.highlightLinks ? 'border-[#ff6b35]' : 'border-[#e0e0e0]'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]`}
-              />
-              {errors.highlightLinks && (
-                <p className="mt-1 text-sm text-[#ff6b35]">{errors.highlightLinks}</p>
-              )}
-            </div>
-
-            <div>
-              <InputLabel htmlFor="visibility">
-                Profile Visibility
-              </InputLabel>
-              <select
-                id="visibility"
-                name="visibility"
-                value={formData.visibility}
-                onChange={handleChange}
+                placeholder="https://youtube.com/watch?v=..."
                 className="mt-1 block w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
-              >
-                <option value="private">Private</option>
-                <option value="public">Public</option>
-              </select>
-              <p className="mt-1 text-xs text-gray-500">
-                Public profiles can be discovered by coaches and recruiters.
-              </p>
+              />
             </div>
           </div>
 
