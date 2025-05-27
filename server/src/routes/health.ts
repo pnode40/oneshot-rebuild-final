@@ -3,8 +3,8 @@ import { db } from '../db/client';
 
 const router = Router();
 
-// Basic health check
-router.get('/', async (req: Request, res: Response) => {
+// Define a health response function to avoid code duplication
+const sendHealthResponse = async (req: Request, res: Response) => {
   try {
     // Check database connection
     await db.query.users.findFirst();
@@ -27,9 +27,20 @@ router.get('/', async (req: Request, res: Response) => {
         database: 'disconnected',
         server: 'running'
       },
-      error: 'Database connection failed'
+      error: String(error)
     });
   }
+};
+
+// Health check endpoint with trailing slash
+router.get('/', sendHealthResponse);
+
+// Health check endpoint without trailing slash
+router.get('', sendHealthResponse);
+
+// Test route for Sentry error tracking
+router.get('/test-error', (req, res) => {
+  throw new Error('This is a test error for Sentry monitoring');
 });
 
 // Detailed health check

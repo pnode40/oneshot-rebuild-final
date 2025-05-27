@@ -19,8 +19,8 @@ export async function createMediaItemForAthlete(userId: number, data: AthletePro
   const [created] = await db
     .insert(mediaItems)
     .values({
-      athleteProfileUserId: profile.userId,
       ...data,
+      athleteProfileUserId: profile.userId,
     })
     .returning();
 

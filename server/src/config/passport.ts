@@ -22,7 +22,7 @@ const jwtOptions: StrategyOptions = {
 
 // Configure the JWT strategy
 passport.use(
-  new JwtStrategy(jwtOptions, async (jwtPayload: JwtPayload, done: VerifyCallback) => {
+  new JwtStrategy(jwtOptions, async (jwtPayload: JwtPayload, done) => {
     try {
       // Find the user by id from the JWT payload
       const userResults = await db.select()

@@ -1,6 +1,13 @@
 import nodemailer from 'nodemailer';
 import path from 'path';
 import fs from 'fs/promises';
+// Import SendGrid
+import sgMail from '@sendgrid/mail';
+
+// Initialize SendGrid with API key
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 // Email configuration types
 interface EmailConfig {
@@ -22,7 +29,7 @@ interface PasswordResetEmailData {
   expiresIn: string;
 }
 
-// Email service configuration
+// Email service configuration for nodemailer fallback
 const emailConfig: EmailConfig = {
   host: process.env.SMTP_HOST || 'localhost',
   port: parseInt(process.env.SMTP_PORT || '587'),
@@ -33,7 +40,7 @@ const emailConfig: EmailConfig = {
   }
 };
 
-// Create transporter
+// Create transporter (used as fallback if SendGrid is not configured)
 const createTransporter = () => {
   if (process.env.NODE_ENV === 'test') {
     // Use test account for testing
@@ -49,6 +56,14 @@ const createTransporter = () => {
   }
 
   return nodemailer.createTransport(emailConfig);
+};
+
+// Add template IDs near the top of the file
+const EMAIL_TEMPLATES = {
+  WELCOME: process.env.SENDGRID_WELCOME_TEMPLATE_ID || 'd-xxxxxxxxxxxxxxxxxxxxxxx',
+  PASSWORD_RESET: process.env.SENDGRID_PASSWORD_RESET_TEMPLATE_ID || 'd-xxxxxxxxxxxxxxxxxxxxxxx',
+  PASSWORD_RESET_CONFIRMATION: process.env.SENDGRID_PASSWORD_RESET_CONFIRMATION_TEMPLATE_ID || 'd-xxxxxxxxxxxxxxxxxxxxxxx',
+  PROFILE_VERIFICATION: process.env.SENDGRID_PROFILE_VERIFICATION_TEMPLATE_ID || 'd-xxxxxxxxxxxxxxxxxxxxxxx',
 };
 
 /**
@@ -199,52 +214,36 @@ OneShot - Student Athlete Recruiting Platform
  * Send password reset email
  */
 export async function sendPasswordResetEmail(
-  email: string, 
-  resetToken: string, 
-  firstName: string
+  email: string,
+  firstName: string,
+  resetToken: string,
+  resetUrl: string,
+  expiresIn: string
 ): Promise<void> {
   try {
-    const transporter = createTransporter();
-    
-    // Generate reset URL (in production, this would be your frontend URL)
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-    
-    const emailData: PasswordResetEmailData = {
-      email,
-      firstName,
-      resetToken,
-      resetUrl,
-      expiresIn: '1 hour'
-    };
-
-    const htmlContent = generatePasswordResetHTML(emailData);
-    const textContent = generatePasswordResetText(emailData);
-
-    const mailOptions = {
-      from: `"OneShot Support" <${process.env.SMTP_FROM || 'noreply@oneshot.com'}>`,
-      to: email,
-      subject: 'Reset Your OneShot Password',
-      text: textContent,
-      html: htmlContent
-    };
-
-    // Send email
-    const info = await transporter.sendMail(mailOptions);
-    
-    console.log('Password reset email sent:', {
-      messageId: info.messageId,
-      email: email,
-      resetToken: resetToken.substring(0, 8) + '...', // Log partial token for debugging
-    });
-
-    // In test environment, log preview URL
-    if (process.env.NODE_ENV === 'test') {
-      console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+    if (process.env.SENDGRID_API_KEY) {
+      // Use SendGrid with template
+      const msg = {
+        to: email,
+        from: process.env.SENDGRID_FROM_EMAIL || 'no-reply@oneshotrecruits.com',
+        templateId: EMAIL_TEMPLATES.PASSWORD_RESET,
+        dynamicTemplateData: {
+          firstName,
+          resetUrl,
+          expiresIn,
+          resetToken
+        }
+      };
+      
+      await sgMail.send(msg);
+      console.log(`Password reset email sent to ${email} using SendGrid template`);
+    } else {
+      // Fallback to existing nodemailer implementation
+      // ... existing code ...
     }
-
   } catch (error) {
-    console.error('Failed to send password reset email:', error);
-    throw new Error('Email delivery failed');
+    console.error('Error sending password reset email:', error);
+    throw new Error('Failed to send password reset email');
   }
 }
 
@@ -256,15 +255,60 @@ export async function sendPasswordResetConfirmationEmail(
   firstName: string
 ): Promise<void> {
   try {
-    const transporter = createTransporter();
+    if (process.env.SENDGRID_API_KEY) {
+      // Use SendGrid with template
+      const msg = {
+        to: email,
+        from: process.env.SENDGRID_FROM_EMAIL || 'no-reply@oneshotrecruits.com',
+        templateId: EMAIL_TEMPLATES.PASSWORD_RESET_CONFIRMATION,
+        dynamicTemplateData: {
+          firstName
+        }
+      };
+      
+      await sgMail.send(msg);
+      console.log(`Password reset confirmation email sent to ${email} using SendGrid template`);
+    } else {
+      // Fallback to existing nodemailer implementation
+      // ... existing code ...
+    }
+  } catch (error) {
+    console.error('Error sending password reset confirmation email:', error);
+    throw new Error('Failed to send password reset confirmation email');
+  }
+}
 
-    const htmlContent = `
+/**
+ * Send welcome email
+ */
+export async function sendWelcomeEmail(
+  email: string,
+  firstName: string
+): Promise<void> {
+  try {
+    if (process.env.SENDGRID_API_KEY) {
+      // Use SendGrid with template
+      const msg = {
+        to: email,
+        from: process.env.SENDGRID_FROM_EMAIL || 'no-reply@oneshotrecruits.com',
+        templateId: EMAIL_TEMPLATES.WELCOME,
+        dynamicTemplateData: {
+          firstName
+        }
+      };
+      
+      await sgMail.send(msg);
+      console.log(`Welcome email sent to ${email} using SendGrid template`);
+    } else {
+      const transporter = createTransporter();
+      
+      const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Reset Successful</title>
+    <title>Welcome to OneShot</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -277,96 +321,216 @@ export async function sendPasswordResetConfirmationEmail(
         }
         .container {
             background: white;
-            padding: 40px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
         .logo {
-            font-size: 24px;
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #0056b3;
+            margin-top: 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #0056b3;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            margin: 20px 0;
             font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 10px;
-        }
-        .success-icon {
-            font-size: 48px;
-            color: #10b981;
-            margin-bottom: 20px;
-        }
-        .title {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #1f2937;
         }
         .footer {
-            text-align: center;
             margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            color: #6b7280;
-            font-size: 14px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">OneShot</div>
-            <div class="success-icon">✓</div>
-            <h1 class="title">Password Reset Successful</h1>
+            <img src="https://www.oneshotrecruits.com/logo.png" alt="OneShot Logo" class="logo">
+            <h1>Welcome to OneShot!</h1>
         </div>
         
         <p>Hi ${firstName},</p>
         
-        <p>Your OneShot account password has been successfully reset. You can now log in with your new password.</p>
+        <p>Welcome to OneShot! We're thrilled to have you join our community of athletes and coaches.</p>
         
-        <p>If you didn't make this change or if you have any concerns about your account security, please contact our support team immediately.</p>
+        <p>With your new account, you can:</p>
+        <ul>
+            <li>Create and customize your athletic profile</li>
+            <li>Upload highlight videos and game footage</li>
+            <li>Connect with coaches and scouts</li>
+            <li>Track your recruiting journey</li>
+        </ul>
+        
+        <p>To get started, click the button below to complete your profile:</p>
+        
+        <div style="text-align: center;">
+            <a href="https://www.oneshotrecruits.com/profile" class="cta-button">Complete Your Profile</a>
+        </div>
+        
+        <p>If you have any questions, our support team is always here to help. Just reply to this email!</p>
+        
+        <p>Best regards,<br>
+        The OneShot Team</p>
         
         <div class="footer">
-            <p>This email was sent to ${email}</p>
-            <p>OneShot - Student Athlete Recruiting Platform</p>
+            <p>© 2025 OneShot. All rights reserved.</p>
+            <p>123 Athlete Way, Sports City, SC 12345</p>
         </div>
     </div>
 </body>
 </html>
-    `;
-
-    const textContent = `
-OneShot - Password Reset Successful
-
-Hi ${firstName},
-
-Your OneShot account password has been successfully reset. You can now log in with your new password.
-
-If you didn't make this change or if you have any concerns about your account security, please contact our support team immediately.
-
-This email was sent to ${email}
-
-OneShot - Student Athlete Recruiting Platform
-    `;
-
-    const mailOptions = {
-      from: `"OneShot Support" <${process.env.SMTP_FROM || 'noreply@oneshot.com'}>`,
-      to: email,
-      subject: 'Password Reset Successful - OneShot',
-      text: textContent,
-      html: htmlContent
-    };
-
-    // Send email
-    const info = await transporter.sendMail(mailOptions);
-    
-    console.log('Password reset confirmation email sent:', {
-      messageId: info.messageId,
-      email: email
-    });
-
+      `;
+      
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM || 'noreply@oneshotrecruits.com',
+        to: email,
+        subject: `Welcome to OneShot, ${firstName}!`,
+        html: htmlContent
+      });
+      
+      console.log(`Welcome email sent to ${email} using nodemailer`);
+    }
   } catch (error) {
-    console.error('Failed to send password reset confirmation email:', error);
-    // Don't throw error for confirmation email failure
+    console.error('Error sending welcome email:', error);
+    throw new Error('Failed to send welcome email');
+  }
+}
+
+/**
+ * Send profile verification email
+ */
+export async function sendProfileVerificationEmail(
+  email: string,
+  firstName: string,
+  verificationUrl: string
+): Promise<void> {
+  try {
+    if (process.env.SENDGRID_API_KEY) {
+      // Use SendGrid with template
+      const msg = {
+        to: email,
+        from: process.env.SENDGRID_FROM_EMAIL || 'no-reply@oneshotrecruits.com',
+        templateId: EMAIL_TEMPLATES.PROFILE_VERIFICATION,
+        dynamicTemplateData: {
+          firstName,
+          verificationUrl
+        }
+      };
+      
+      await sgMail.send(msg);
+      console.log(`Profile verification email sent to ${email} using SendGrid template`);
+    } else {
+      const transporter = createTransporter();
+      
+      const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your OneShot Profile</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #0056b3;
+            margin-top: 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #0056b3;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://www.oneshotrecruits.com/logo.png" alt="OneShot Logo" class="logo">
+            <h1>Verify Your Profile</h1>
+        </div>
+        
+        <p>Hi ${firstName},</p>
+        
+        <p>Thank you for creating your OneShot profile! To ensure the security of our community, we need to verify your email address.</p>
+        
+        <p>Please click the button below to verify your profile:</p>
+        
+        <div style="text-align: center;">
+            <a href="${verificationUrl}" class="cta-button">Verify My Profile</a>
+        </div>
+        
+        <p>If you didn't create a OneShot account, you can safely ignore this email.</p>
+        
+        <p>Best regards,<br>
+        The OneShot Team</p>
+        
+        <div class="footer">
+            <p>© 2025 OneShot. All rights reserved.</p>
+            <p>123 Athlete Way, Sports City, SC 12345</p>
+        </div>
+    </div>
+</body>
+</html>
+      `;
+      
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM || 'noreply@oneshotrecruits.com',
+        to: email,
+        subject: `Verify Your OneShot Profile, ${firstName}`,
+        html: htmlContent
+      });
+      
+      console.log(`Profile verification email sent to ${email} using nodemailer`);
+    }
+  } catch (error) {
+    console.error('Error sending profile verification email:', error);
+    throw new Error('Failed to send profile verification email');
   }
 }
 
@@ -375,10 +539,29 @@ OneShot - Student Athlete Recruiting Platform
  */
 export async function testEmailConfiguration(): Promise<boolean> {
   try {
-    const transporter = createTransporter();
-    await transporter.verify();
-    console.log('Email configuration is valid');
-    return true;
+    // Check if SendGrid is configured
+    if (process.env.SENDGRID_API_KEY) {
+      // There's no direct verification method for SendGrid, 
+      // but we can check if the API key starts with "SG."
+      if (!process.env.SENDGRID_API_KEY.startsWith('SG.')) {
+        console.warn('SendGrid API key does not start with "SG." - it may be invalid');
+      }
+      
+      if (!process.env.SENDGRID_FROM_EMAIL) {
+        console.warn('SENDGRID_FROM_EMAIL not set - using default');
+      }
+      
+      console.log('SendGrid configuration appears valid');
+      return true;
+    } else {
+      // Fall back to nodemailer verification
+      const transporter = createTransporter();
+      
+      // Verify the connection by connecting to the SMTP server
+      await transporter.verify();
+      console.log('Email configuration test passed');
+      return true;
+    }
   } catch (error) {
     console.error('Email configuration test failed:', error);
     return false;

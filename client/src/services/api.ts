@@ -3,7 +3,8 @@
  */
 
 // Configure the base URL for all API requests
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+console.log('API_BASE_URL:', API_BASE_URL); // Debugging log
 
 // Key for localStorage profile data in test mode
 const TEST_MODE_PROFILE_DATA_KEY = 'oneShot_testMode_profileData';

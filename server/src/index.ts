@@ -17,12 +17,15 @@ import helmet from 'helmet';
 import http from 'http';
 import { db } from './db/client';
 
+// Sentry for error monitoring (simple setup)
+import * as Sentry from '@sentry/node';
+
 // 3. Route imports
 import profileRouter from './routes/profile';
 import debugRouter from './routes/debug';
 import authRouter from './routes/auth';
 import uploadRouter from './routes/upload';
-import testRoutes from './routes/testRoutes';
+
 import athleteProfileRoutes from './routes/athleteProfileRoutes';
 import mediaItemRouter from './routes/mediaItemRoutes';
 import videoLinkRoutes from './routes/videoLinkRoutes';
@@ -44,6 +47,17 @@ import notificationService from './services/notificationService';
 // 4. Initialize Express
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Initialize Sentry with minimal configuration
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    enabled: process.env.NODE_ENV === 'production',
+    environment: process.env.NODE_ENV || 'development'
+  });
+  
+  console.log('Sentry initialized for error monitoring');
+}
 
 // 5. Middleware setup
 // Configure CORS with explicit options
@@ -76,7 +90,7 @@ app.use('/api/profile', profileRouter);
 app.use('/api/debug', debugRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/upload', uploadRouter);
-app.use('/api', testRoutes);
+
 app.use('/api/athlete-profile', athleteProfileRoutes);
 app.use('/api/media', mediaItemRouter);
 app.use('/api/athlete', videoLinkRoutes);
@@ -152,6 +166,11 @@ app.get('/test-insert', async (req, res) => {
 
 // 9. Global error handler
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // Log the error to Sentry if available
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(err);
+  }
+  
   console.error('Unhandled error:', err);
   res.status(500).json({
     success: false,

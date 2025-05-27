@@ -4,10 +4,7 @@ import typescriptEslintPlugin from '@typescript-eslint/eslint-plugin';
 export default [
   {
     ignores: [
-      'check-db.js', // Ignore problematic JS file
-      'db-check.js',   // Ignore problematic JS file
-      'manual-test.js', // Ignore problematic JS file
-      // Add other global ignores if needed, e.g., 'dist/', 'coverage/'
+      // Add global ignores if needed, e.g., 'dist/', 'coverage/'
     ]
   },
   {

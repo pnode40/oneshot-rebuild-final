@@ -210,7 +210,16 @@ router.post(
 
       // Send password reset email
       try {
-        await sendPasswordResetEmail(email, resetToken, user.firstName || 'User');
+        // Generate reset URL
+        const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+        
+        await sendPasswordResetEmail(
+          email, 
+          user.firstName || 'User', 
+          resetToken, 
+          resetUrl,
+          `${RESET_TOKEN_EXPIRY_HOURS} hour(s)`
+        );
         
         return res.status(200).json(successResponse(
           genericMessage,
