@@ -1,0 +1,33 @@
+{
+  "name": "OneShot Recruiting",
+  "short_name": "OneShot",
+  "description": "Mobile-first athlete recruiting platform",
+  "theme_color": "#1F2A44",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "education"],
+  "screenshots": [
+    {
+      "src": "/screenshot1.png",
+      "sizes": "375x667",
+      "type": "image/png"
+    }
+  ]
+} 
