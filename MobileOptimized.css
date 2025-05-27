@@ -1,0 +1,368 @@
+/* MobileOptimized.css - Responsive video player styles optimized for mobile devices */
+
+/* Base container styles */
+.mobile-video-container {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* 16:9 aspect ratio using padding-bottom technique */
+.mobile-video-container::before {
+  content: "";
+  display: block;
+  padding-bottom: 56.25%; /* 9/16 * 100% */
+  transition: padding-bottom 0.3s ease;
+}
+
+/* Video element */
+.mobile-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1;
+  background-color: #000;
+}
+
+/* Thumbnail placeholder */
+.video-thumbnail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Load Video button */
+.load-video-btn {
+  padding: 12px 24px;
+  background-color: rgba(255, 107, 107, 0.85);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 3;
+  
+  /* Touch-friendly size */
+  min-width: 160px;
+  min-height: 50px;
+}
+
+.load-video-btn:hover, .load-video-btn:focus {
+  background-color: rgba(255, 107, 107, 1);
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Video controls container */
+.mobile-video-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 4;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* Hide controls after a delay when video is playing (desktop only) */
+@media (min-width: 769px) {
+  .is-playing .mobile-video-controls {
+    opacity: 0;
+  }
+  
+  .mobile-video-container:hover .mobile-video-controls {
+    opacity: 1;
+  }
+}
+
+/* Control buttons */
+.video-control-btn {
+  background-color: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 5px;
+  transition: background-color 0.2s ease;
+}
+
+.video-control-btn:hover, .video-control-btn:focus {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Play/Pause button with icon */
+.play-pause-btn {
+  background-color: rgba(255, 107, 107, 0.7);
+  width: 50px;
+  height: 50px;
+}
+
+.play-pause-btn:hover, .play-pause-btn:focus {
+  background-color: rgba(255, 107, 107, 0.9);
+}
+
+/* Progress bar container */
+.progress-container {
+  flex: 1;
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  margin: 0 15px;
+  
+  /* Touch-friendly target */
+  padding: 10px 0;
+  margin-top: -10px;
+  margin-bottom: -10px;
+}
+
+/* Progress bar fill */
+.progress-bar {
+  height: 8px;
+  background-color: #ff6b6b;
+  border-radius: 4px;
+  position: absolute;
+  top: 10px;
+  left: 0;
+}
+
+/* Progress bar thumb */
+.progress-thumb {
+  width: 18px;
+  height: 18px;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+  position: absolute;
+  top: 5px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  z-index: 5;
+  transition: transform 0.1s ease;
+}
+
+.progress-container:hover .progress-thumb,
+.progress-container:active .progress-thumb {
+  transform: translateX(-50%) scale(1.2);
+}
+
+/* Volume container */
+.volume-container {
+  display: flex;
+  align-items: center;
+  width: 100px;
+  transition: width 0.3s ease;
+}
+
+/* Volume slider */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  outline: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background-color: #ff6b6b;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Fullscreen button */
+.fullscreen-btn {
+  background-color: transparent;
+  border: none;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .mobile-video-container {
+    max-width: 100%;
+    border-radius: 0;
+  }
+  
+  /* Larger touch targets for mobile */
+  .video-control-btn {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .play-pause-btn {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .progress-container {
+    height: 10px;
+    padding: 15px 0;
+    margin-top: -15px;
+    margin-bottom: -15px;
+  }
+  
+  .progress-bar {
+    height: 10px;
+    top: 15px;
+  }
+  
+  .progress-thumb {
+    width: 22px;
+    height: 22px;
+    top: 9px;
+  }
+  
+  /* Hide volume control on mobile to save space */
+  .volume-container {
+    display: none;
+  }
+  
+  /* Make load button more prominent */
+  .load-video-btn {
+    padding: 15px 30px;
+    font-size: 18px;
+    min-width: 180px;
+    min-height: 60px;
+  }
+}
+
+/* Landscape orientation handling for mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .mobile-video-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    z-index: 999;
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .mobile-video-container::before {
+    padding-bottom: 0; /* Override aspect ratio */
+  }
+  
+  .mobile-video {
+    object-fit: contain;
+  }
+  
+  /* Adjust controls positioning for landscape */
+  .mobile-video-controls {
+    padding: 10px 20px;
+  }
+  
+  /* Make the controls slightly more compact in landscape */
+  .video-control-btn {
+    width: 44px;
+    height: 44px;
+    margin: 0 3px;
+  }
+  
+  .play-pause-btn {
+    width: 50px;
+    height: 50px;
+  }
+  
+  /* Add exit fullscreen button for landscape mode */
+  .exit-landscape-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    cursor: pointer;
+  }
+}
+
+/* Support for iOS Safari and other mobile browsers */
+@supports (-webkit-touch-callout: none) {
+  .mobile-video-container {
+    /* iOS-specific tweaks */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Ensure video controls are visible on iOS */
+  .mobile-video-controls {
+    opacity: 1 !important;
+  }
+}
+
+/* Vendor prefixes for broader browser support */
+.mobile-video-container {
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+}
+
+.load-video-btn {
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  -ms-transition: all 0.2s ease;
+  -o-transition: all 0.2s ease;
+  -webkit-transform: scale(1);
+  -moz-transform: scale(1);
+  -ms-transform: scale(1);
+  -o-transform: scale(1);
+}
+
+.load-video-btn:hover, .load-video-btn:focus {
+  -webkit-transform: scale(1.05);
+  -moz-transform: scale(1.05);
+  -ms-transform: scale(1.05);
+  -o-transform: scale(1.05);
+} 

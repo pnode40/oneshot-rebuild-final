@@ -1,0 +1,66 @@
+/* VideoPlayerDemo.css */
+
+.video-player-demo {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.demo-description {
+  text-align: center;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.video-demo-item {
+  margin-bottom: 40px;
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.video-demo-item h2 {
+  color: #ff6b6b;
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+.demo-features {
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.demo-features h3 {
+  color: #ff6b6b;
+  margin-bottom: 15px;
+}
+
+.demo-features ul {
+  padding-left: 20px;
+}
+
+.demo-features li {
+  margin-bottom: 8px;
+  color: #444;
+}
+
+@media (max-width: 768px) {
+  .video-player-demo {
+    padding: 10px;
+  }
+  
+  .video-demo-item {
+    padding: 15px;
+  }
+} 
