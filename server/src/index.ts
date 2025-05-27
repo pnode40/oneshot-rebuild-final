@@ -1,63 +1,29 @@
 // 1. Environment setup
 import dotenv from 'dotenv';
-import path from 'path';
-
-// Load .env from server directory - fix the path resolution
-dotenv.config({ path: path.join(process.cwd(), 'server', '.env') });
-
-// Temporary fix: Ensure DATABASE_URL is available
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://OneShotMay25_owner:npg_OPr6NdBp0QVH@ep-wispy-lab-a5ldd1qu-pooler.us-east-2.aws.neon.tech/OneShotMay25?sslmode=require';
-}
+dotenv.config();
 
 // 2. Core imports
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import helmet from 'helmet';
-import http from 'http';
 import { db } from './db/client';
-
-// Sentry for error monitoring (simple setup)
-import * as Sentry from '@sentry/node';
 
 // 3. Route imports
 import profileRouter from './routes/profile';
 import debugRouter from './routes/debug';
 import authRouter from './routes/auth';
 import uploadRouter from './routes/upload';
-
+// import testRoutes from './routes/testRoutes'; // Removed - file doesn't exist
 import athleteProfileRoutes from './routes/athleteProfileRoutes';
 import mediaItemRouter from './routes/mediaItemRoutes';
 import videoLinkRoutes from './routes/videoLinkRoutes';
 import passwordResetRoutes from './routes/passwordResetRoutes';
-import healthRouter from './routes/health';
-import profilePhotoRoutes from './routes/api/profilePhotos';
-import securityDashboardRoutes from './routes/api/securityDashboard';
-import aiSecurityIntelligenceRoutes from './routes/api/aiSecurityIntelligence';
-import notificationRoutes from './routes/api/notifications';
-import analyticsRoutes from './routes/api/analytics';
-import profileAnalyticsRoutes from './routes/api/profileAnalytics';
-
-// 4. Real-time security imports
-import SocketServerManager from './websocket/socketServer';
-import realTimeSecurityService from './services/realTimeSecurityService';
-import aiSecurityIntelligence from './services/aiSecurityIntelligence';
-import notificationService from './services/notificationService';
+import publicProfilesRouter from './routes/publicProfiles';
 
 // 4. Initialize Express
 const app = express();
 const PORT = process.env.PORT || 3001;
-
-// Initialize Sentry with minimal configuration
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    enabled: process.env.NODE_ENV === 'production',
-    environment: process.env.NODE_ENV || 'development'
-  });
-  
-  console.log('Sentry initialized for error monitoring');
-}
 
 // 5. Middleware setup
 // Configure CORS with explicit options
@@ -90,20 +56,19 @@ app.use('/api/profile', profileRouter);
 app.use('/api/debug', debugRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/upload', uploadRouter);
-
+// app.use('/api', testRoutes); // Removed - file doesn't exist
 app.use('/api/athlete-profile', athleteProfileRoutes);
 app.use('/api/media', mediaItemRouter);
 app.use('/api/athlete', videoLinkRoutes);
 app.use('/api/auth', passwordResetRoutes);
-app.use('/api/health', healthRouter);
-app.use('/api/profile-photos', profilePhotoRoutes);
-app.use('/api/security-dashboard', securityDashboardRoutes);
-app.use('/api/ai-security', aiSecurityIntelligenceRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/v1/analytics', profileAnalyticsRoutes);
+app.use('/api/public', publicProfilesRouter);
 
-// 8. Test route
+// 8. Setup React app route for public profiles
+app.get('/u/:slug', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+});
+
+// 9. Test route
 import { positionEnum, athleteRoleEnum, profiles } from './db/schema';
 import { sql } from 'drizzle-orm';
 
@@ -117,10 +82,6 @@ app.get('/test-insert', async (req, res) => {
       userId: 1, // Associate with the first user in the database
       positionPrimary: 'QB' as const, // Use literal string that matches the enum
       athleteRole: athleteRoleEnum.enumValues[0], // Use 'high_school' from the enum values
-      
-      // Required fields for schema validation
-      firstName: "Test",
-      lastName: "Athlete", 
       
       // Optional fields that are properly typed
       highSchoolName: "Test High School",
@@ -164,13 +125,8 @@ app.get('/test-insert', async (req, res) => {
   }
 });
 
-// 9. Global error handler
+// 10. Global error handler
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // Log the error to Sentry if available
-  if (process.env.SENTRY_DSN) {
-    Sentry.captureException(err);
-  }
-  
   console.error('Unhandled error:', err);
   res.status(500).json({
     success: false,
@@ -179,54 +135,27 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   });
 });
 
-// 10. Database connection test
+// 11. Database connection test (non-blocking)
 async function testConnection() {
   try {
-    console.log('DATABASE_URL being used:', process.env.DATABASE_URL);
     console.log('Attempting to query profiles...');
     const result = await db.query.profiles.findMany();
-    console.log('Fetched profiles (indicates connection success):', result);
+    console.log('✅ Database connection successful! Fetched profiles:', result.length, 'records');
   } catch (error) {
-    console.error('Error during database test:', error);
+    console.warn('⚠️  Database connection failed - this is OK for development without a database:');
+    console.warn('   Error:', error instanceof Error ? error.message : String(error));
+    console.warn('   To fix: Set DATABASE_URL environment variable or start a local PostgreSQL instance');
+    console.warn('   Server will continue running without database functionality');
   }
 }
 
-// 11. Start server with WebSocket support
-const server = http.createServer(app);
-
-// Initialize WebSocket server
-const socketManager = new SocketServerManager(server);
-
-// Connect real-time security service to WebSocket server
-realTimeSecurityService.setSocketManager(socketManager);
-
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`WebSocket server initialized for real-time security monitoring`);
-  console.log(`File upload test page available at: http://localhost:${PORT}/upload-test.html`);
-  testConnection();
+// 12. Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📁 File upload test page available at: http://localhost:${PORT}/upload-test.html`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 Public profiles available at: http://localhost:${PORT}/u/{slug}`);
+  
+  // Test database connection but don't block startup
+  setTimeout(testConnection, 1000);
 });
-
-// Graceful shutdown handling
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  realTimeSecurityService.destroy();
-  notificationService.destroy();
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  realTimeSecurityService.destroy();
-  notificationService.destroy();
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
-
-// Export app and server for testing
-export { app, server, socketManager, realTimeSecurityService };
