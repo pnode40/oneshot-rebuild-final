@@ -12,7 +12,6 @@ import {
   updateVideoLink,
   deleteVideoLink
 } from '../services/videoLinkService';
-import { AuthRequest } from '../types';
 
 // Create router
 const router = Router();
@@ -31,24 +30,19 @@ router.post(
     }),
     body: videoLinkUploadSchema
   }),
-  (req: Request, res: Response) => {
+  requireSelfOrAdmin,
+  async (req: Request, res: Response) => {
     try {
       const athleteProfileId = parseInt(req.params.athleteProfileId, 10);
+      const videoData = req.body;
       
-      // Add userId param for requireSelfOrAdmin middleware
-      req.params.userId = athleteProfileId.toString();
+      // Add video link to the database
+      const result = await addVideoLink(athleteProfileId, videoData);
       
-      requireSelfOrAdmin(req, res, async () => {
-        const videoData = req.body;
-        
-        // Add video link to the database
-        const result = await addVideoLink(athleteProfileId, videoData);
-        
-        return res.status(201).json(successResponse(
-          'Video link added successfully',
-          result[0]
-        ));
-      });
+      return res.status(201).json(successResponse(
+        'Video link added successfully',
+        result[0]
+      ));
     } catch (error) {
       console.error('Error adding video link:', error);
       return res.status(500).json(errorResponse(
@@ -72,22 +66,18 @@ router.get(
       athleteProfileId: z.string().min(1, 'Athlete profile ID is required')
     })
   }),
-  (req: Request, res: Response) => {
+  requireSelfOrAdmin,
+  async (req: Request, res: Response) => {
     try {
       const athleteProfileId = parseInt(req.params.athleteProfileId, 10);
       
-      // Add userId param for requireSelfOrAdmin middleware
-      req.params.userId = athleteProfileId.toString();
+      // Get all video links for the profile
+      const videos = await getVideoLinks(athleteProfileId);
       
-      requireSelfOrAdmin(req, res, async () => {
-        // Get all video links for the profile
-        const videos = await getVideoLinks(athleteProfileId);
-        
-        return res.status(200).json(successResponse(
-          'Video links retrieved successfully',
-          videos
-        ));
-      });
+      return res.status(200).json(successResponse(
+        'Video links retrieved successfully',
+        videos
+      ));
     } catch (error) {
       console.error('Error retrieving video links:', error);
       return res.status(500).json(errorResponse(
@@ -112,31 +102,26 @@ router.get(
       videoId: z.string().min(1, 'Video ID is required')
     })
   }),
-  (req: Request, res: Response) => {
+  requireSelfOrAdmin,
+  async (req: Request, res: Response) => {
     try {
       const athleteProfileId = parseInt(req.params.athleteProfileId, 10);
+      const videoId = parseInt(req.params.videoId, 10);
       
-      // Add userId param for requireSelfOrAdmin middleware
-      req.params.userId = athleteProfileId.toString();
+      // Get the specific video link
+      const result = await getVideoLinkById(videoId, athleteProfileId);
       
-      requireSelfOrAdmin(req, res, async () => {
-        const videoId = parseInt(req.params.videoId, 10);
-        
-        // Get the specific video link
-        const result = await getVideoLinkById(videoId, athleteProfileId);
-        
-        if (!result.length) {
-          return res.status(404).json(errorResponse(
-            'Video not found',
-            'No video exists with the provided ID for this athlete profile'
-          ));
-        }
-        
-        return res.status(200).json(successResponse(
-          'Video retrieved successfully',
-          result[0]
+      if (!result.length) {
+        return res.status(404).json(errorResponse(
+          'Video not found',
+          'No video exists with the provided ID for this athlete profile'
         ));
-      });
+      }
+      
+      return res.status(200).json(successResponse(
+        'Video retrieved successfully',
+        result[0]
+      ));
     } catch (error) {
       console.error('Error retrieving video:', error);
       return res.status(500).json(errorResponse(
@@ -162,32 +147,27 @@ router.put(
     }),
     body: videoLinkUploadSchema.partial()
   }),
-  (req: Request, res: Response) => {
+  requireSelfOrAdmin,
+  async (req: Request, res: Response) => {
     try {
       const athleteProfileId = parseInt(req.params.athleteProfileId, 10);
+      const videoId = parseInt(req.params.videoId, 10);
+      const updateData = req.body;
       
-      // Add userId param for requireSelfOrAdmin middleware
-      req.params.userId = athleteProfileId.toString();
+      // Update the video link
+      const result = await updateVideoLink(videoId, athleteProfileId, updateData);
       
-      requireSelfOrAdmin(req, res, async () => {
-        const videoId = parseInt(req.params.videoId, 10);
-        const updateData = req.body;
-        
-        // Update the video link
-        const result = await updateVideoLink(videoId, athleteProfileId, updateData);
-        
-        if (!result.length) {
-          return res.status(404).json(errorResponse(
-            'Video not found',
-            'No video exists with the provided ID for this athlete profile'
-          ));
-        }
-        
-        return res.status(200).json(successResponse(
-          'Video updated successfully',
-          result[0]
+      if (!result.length) {
+        return res.status(404).json(errorResponse(
+          'Video not found',
+          'No video exists with the provided ID for this athlete profile'
         ));
-      });
+      }
+      
+      return res.status(200).json(successResponse(
+        'Video updated successfully',
+        result[0]
+      ));
     } catch (error) {
       console.error('Error updating video:', error);
       return res.status(500).json(errorResponse(
@@ -212,30 +192,25 @@ router.delete(
       videoId: z.string().min(1, 'Video ID is required')
     })
   }),
-  (req: Request, res: Response) => {
+  requireSelfOrAdmin,
+  async (req: Request, res: Response) => {
     try {
       const athleteProfileId = parseInt(req.params.athleteProfileId, 10);
+      const videoId = parseInt(req.params.videoId, 10);
       
-      // Add userId param for requireSelfOrAdmin middleware
-      req.params.userId = athleteProfileId.toString();
+      // Delete the video link
+      const result = await deleteVideoLink(videoId, athleteProfileId);
       
-      requireSelfOrAdmin(req, res, async () => {
-        const videoId = parseInt(req.params.videoId, 10);
-        
-        // Delete the video link
-        const result = await deleteVideoLink(videoId, athleteProfileId);
-        
-        if (!result.length) {
-          return res.status(404).json(errorResponse(
-            'Video not found',
-            'No video exists with the provided ID for this athlete profile'
-          ));
-        }
-        
-        return res.status(200).json(successResponse(
-          'Video deleted successfully'
+      if (!result.length) {
+        return res.status(404).json(errorResponse(
+          'Video not found',
+          'No video exists with the provided ID for this athlete profile'
         ));
-      });
+      }
+      
+      return res.status(200).json(successResponse(
+        'Video deleted successfully'
+      ));
     } catch (error) {
       console.error('Error deleting video:', error);
       return res.status(500).json(errorResponse(

@@ -1,11 +1,17 @@
 // 1. Environment setup
 import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from the server directory
 dotenv.config();
+
+// Debug: Check if DATABASE_URL is loaded
+console.log('🔍 DATABASE_URL loaded:', process.env.DATABASE_URL ? 'YES' : 'NO');
+console.log('🔍 DATABASE_URL value:', process.env.DATABASE_URL?.substring(0, 50) + '...');
 
 // 2. Core imports
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
 import helmet from 'helmet';
 import { db } from './db/client';
 
