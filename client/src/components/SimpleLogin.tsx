@@ -36,92 +36,85 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ onSuccess }) => {
     }
   };
 
-  // More compact layout with tighter spacing
+  // True single-screen login with absolutely no scrolling needed
   return (
     <div style={{
       backgroundColor: "#0a1128",
-      minHeight: "100vh",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
+      padding: 0,
       margin: 0,
-      padding: 0
+      height: "100%"
     }}>
       <div style={{
-        width: "90%",
-        maxWidth: "320px",
+        width: "85%",
+        maxWidth: "300px",
         backgroundColor: "white",
-        borderRadius: "12px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-        padding: "20px",
-        marginTop: "-20px" // Move up slightly to reduce scroll
+        borderRadius: "8px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        padding: "15px",
       }}>
         <h2 style={{ 
-          fontSize: "22px", 
+          fontSize: "18px", 
           fontWeight: "bold", 
           textAlign: "center", 
-          marginBottom: "16px",
-          textTransform: "uppercase"
-        }}>Sign In</h2>
+          margin: "0 0 10px 0",
+          color: "#1f2a44"
+        }}>SIGN IN</h2>
         
         {error && (
           <div style={{ 
             backgroundColor: '#ffeeee', 
             color: '#ff6b35', 
-            padding: '8px', 
-            borderRadius: '4px', 
-            marginBottom: '12px', 
-            fontSize: '13px' 
+            padding: '4px 6px', 
+            borderRadius: '3px', 
+            marginBottom: '8px', 
+            fontSize: '11px',
+            lineHeight: '1.2'
           }}>
             {error}
           </div>
         )}
         
         <form onSubmit={handleSubmit} style={{ margin: 0 }}>
-          <div style={{ marginBottom: "12px" }}>
-            <label style={{
-              display: "block",
-              fontSize: "13px",
-              fontWeight: "500",
-              marginBottom: "3px"
-            }}>
-              Email
-            </label>
+          <div style={{ marginBottom: "6px" }}>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              placeholder="Email"
               style={{
                 width: "100%",
-                padding: "8px 12px",
+                padding: "5px 8px",
                 border: "1px solid #e0e0e0",
-                borderRadius: "6px",
-                fontSize: "15px"
+                borderRadius: "4px",
+                fontSize: "13px",
+                height: "32px"
               }}
             />
           </div>
           
-          <div style={{ marginBottom: "14px" }}>
-            <label style={{
-              display: "block",
-              fontSize: "13px",
-              fontWeight: "500",
-              marginBottom: "3px"
-            }}>
-              Password
-            </label>
+          <div style={{ marginBottom: "8px" }}>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              placeholder="Password"
               style={{
                 width: "100%",
-                padding: "8px 12px",
+                padding: "5px 8px",
                 border: "1px solid #e0e0e0",
-                borderRadius: "6px",
-                fontSize: "15px"
+                borderRadius: "4px",
+                fontSize: "13px",
+                height: "32px"
               }}
             />
           </div>
@@ -131,32 +124,32 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ onSuccess }) => {
             disabled={isLoading}
             style={{
               width: "100%",
-              height: "40px",
+              height: "34px",
               backgroundColor: "#00c2ff",
               color: "white",
               border: "none",
-              borderRadius: "6px",
-              fontSize: "14px",
+              borderRadius: "4px",
+              fontSize: "13px",
               fontWeight: "600",
-              textTransform: "uppercase",
               cursor: isLoading ? "not-allowed" : "pointer",
-              opacity: isLoading ? 0.7 : 1,
-              marginTop: "8px"
+              opacity: isLoading ? 0.7 : 1
             }}
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Signing in...' : 'SIGN IN'}
           </button>
         
-          <div style={{ marginTop: "16px", textAlign: "center" }}>
-            <p style={{ fontSize: "13px", color: "#666", margin: 0 }}>
-              New to OneShot? <Link to="/register" style={{ color: "#00c2ff" }}>Create an account</Link>
-            </p>
-          </div>
-          
-          <div style={{ marginTop: "16px", paddingTop: "10px", borderTop: "1px solid #f0f0f0", textAlign: "center" }}>
-            <p style={{ fontSize: "11px", color: "#999", margin: 0 }}>
-              OneShot • Built for athletes
-            </p>
+          <div style={{ 
+            marginTop: "8px", 
+            display: "flex", 
+            justifyContent: "space-between",
+            alignItems: "center" 
+          }}>
+            <span style={{ fontSize: "10px", color: "#999" }}>
+              OneShot
+            </span>
+            <span style={{ fontSize: "11px" }}>
+              <Link to="/register" style={{ color: "#00c2ff" }}>Create account</Link>
+            </span>
           </div>
         </form>
       </div>
