@@ -43,21 +43,64 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
     }
   };
 
+  // Completely redesigned mobile-first approach
   return (
-    <div className="bg-[#0a1128] w-full flex flex-col items-center justify-center px-0 py-8 md:py-12">
-      <div className="w-full max-w-sm mx-auto px-4">
-        <div className="bg-white rounded-2xl shadow-xl p-6 w-full">
-          <h2 className="text-2xl font-bold mb-6 text-center uppercase tracking-tight">SIGN IN</h2>
+    <div style={{
+      backgroundColor: "#0a1128",
+      width: "100%",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      margin: 0,
+      padding: 0,
+    }}>
+      <div style={{
+        width: "100%",
+        maxWidth: "350px",
+        padding: "0 16px",
+        boxSizing: "border-box",
+      }}>
+        <div style={{
+          backgroundColor: "#ffffff",
+          borderRadius: "16px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          padding: "24px",
+          width: "100%",
+        }}>
+          <h2 style={{
+            fontSize: "24px",
+            fontWeight: "bold",
+            marginBottom: "24px",
+            textAlign: "center",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+          }}>SIGN IN</h2>
           
           {error && (
-            <div className="mb-4 p-3 bg-red-100 text-[#ff6b35] rounded-lg text-sm font-medium">
+            <div style={{
+              marginBottom: "16px",
+              padding: "12px",
+              backgroundColor: "#ffeeee",
+              color: "#ff6b35",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "500",
+            }}>
               {error}
             </div>
           )}
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" style={{
+                display: "block",
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#333",
+                marginBottom: "4px",
+              }}>
                 Email
               </label>
               <input
@@ -65,13 +108,26 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
+                style={{
+                  width: "100%",
+                  padding: "10px 16px",
+                  backgroundColor: "#f9f9f9",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px",
+                  fontSize: "16px",
+                }}
                 required
               />
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" style={{
+                display: "block",
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#333",
+                marginBottom: "4px",
+              }}>
                 Password
               </label>
               <input
@@ -79,7 +135,14 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-[#f9f9f9] border border-[#e0e0e0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00c2ff]"
+                style={{
+                  width: "100%",
+                  padding: "10px 16px",
+                  backgroundColor: "#f9f9f9",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: "8px",
+                  fontSize: "16px",
+                }}
                 required
               />
             </div>
@@ -87,22 +150,40 @@ const Login: React.FC<LoginProps> = ({ onSuccess }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full h-10 px-4 font-semibold uppercase tracking-wide bg-[#00c2ff] text-white rounded-lg hover:bg-[#ff6b35] transition-colors duration-200 ${
-                isLoading ? 'opacity-70 cursor-not-allowed' : ''
-              }`}
+              style={{
+                width: "100%",
+                height: "44px",
+                padding: "0 16px",
+                fontWeight: "600",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                backgroundColor: "#00c2ff",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: isLoading ? "not-allowed" : "pointer",
+                opacity: isLoading ? 0.7 : 1,
+                fontSize: "14px",
+                marginTop: "8px",
+              }}
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
             
-            <div className="mt-4 text-center text-sm text-[#f9f9f9]">
-              <p className="mt-6 text-center text-gray-600">
-                New to OneShot? <Link to="/register" className="text-[#00c2ff] hover:text-[#ff6b35]">Create an account</Link>
+            <div style={{ marginTop: "16px", textAlign: "center" }}>
+              <p style={{ fontSize: "14px", color: "#666" }}>
+                New to OneShot? <Link to="/register" style={{ color: "#00c2ff", textDecoration: "none" }}>Create an account</Link>
               </p>
             </div>
           </form>
           
-          <div className="mt-8 pt-4 border-t border-gray-100 text-center">
-            <p className="text-xs text-gray-500">
+          <div style={{ 
+            marginTop: "32px", 
+            paddingTop: "16px", 
+            borderTop: "1px solid #f0f0f0", 
+            textAlign: "center" 
+          }}>
+            <p style={{ fontSize: "12px", color: "#999" }}>
               OneShot • Built for athletes
             </p>
           </div>

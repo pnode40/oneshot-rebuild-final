@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#1F2A44" />
+    <meta name="theme-color" content="#0a1128" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="OneShot" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     
@@ -17,6 +17,42 @@
     
     <title>OneShot - Athlete Recruiting Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+      /* Aggressive style overrides for mobile */
+      body, html {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-color: #0a1128 !important;
+        overflow-x: hidden !important;
+        position: relative !important;
+      }
+      
+      #root {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        background-color: #0a1128 !important;
+      }
+      
+      /* Fix for iOS devices */
+      @supports (-webkit-touch-callout: none) {
+        body {
+          /* The hack for Safari */
+          height: -webkit-fill-available !important;
+          background-color: #0a1128 !important;
+        }
+        #root {
+          height: -webkit-fill-available !important;
+          background-color: #0a1128 !important;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
