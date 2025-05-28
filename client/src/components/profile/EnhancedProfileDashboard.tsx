@@ -21,6 +21,7 @@ import { MdDashboard, MdVerified } from 'react-icons/md';
 import VideoLinkManager from './VideoLinkManager';
 import ProfilePhotoManager from './ProfilePhotoManager';
 import TranscriptManager from './TranscriptManager';
+import OGImageManager from './OGImageManager';
 
 interface ProfileStats {
   totalVideos: number;
@@ -112,6 +113,7 @@ const EnhancedProfileDashboard: React.FC<EnhancedProfileDashboardProps> = ({
     { id: 'videos', label: 'Videos', icon: FaVideo },
     { id: 'photos', label: 'Photos', icon: FaCamera },
     { id: 'transcripts', label: 'Transcripts', icon: FaGraduationCap },
+    { id: 'social', label: 'Social Media', icon: FaShare },
   ];
 
   const getCompletionColor = (percentage: number) => {
@@ -451,6 +453,12 @@ const EnhancedProfileDashboard: React.FC<EnhancedProfileDashboardProps> = ({
         {activeTab === 'transcripts' && (
           <div className="p-6">
             <TranscriptManager athleteProfileId={athleteProfileId} isOwner={isOwner} />
+          </div>
+        )}
+
+        {activeTab === 'social' && (
+          <div className="p-6">
+            <OGImageManager athleteProfileId={athleteProfileId} isOwner={isOwner} />
           </div>
         )}
       </div>

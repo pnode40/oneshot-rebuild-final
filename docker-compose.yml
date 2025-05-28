@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # Local PostgreSQL for development
+  postgres:
+    image: postgres:15-alpine
+    container_name: oneshot-postgres-dev
+    environment:
+      POSTGRES_DB: oneshot_dev
+      POSTGRES_USER: oneshot_dev
+      POSTGRES_PASSWORD: local_dev_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/db_reset:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oneshot_dev -d oneshot_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - oneshot-network
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: oneshot-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - oneshot-network
+
+  # Backend API server
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: development
+    container_name: oneshot-backend-dev
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://oneshot_dev:local_dev_only@postgres:5432/oneshot_dev
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=local_dev_jwt_secret_key_change_in_production
+      - PORT=3001
+      - CORS_ORIGIN=http://localhost:5173
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server:/app
+      - /app/node_modules  # Anonymous volume for node_modules
+      - ./server/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - oneshot-network
+    restart: unless-stopped
+
+  # Frontend development server
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: development
+    container_name: oneshot-frontend-dev
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
+      - VITE_WS_URL=ws://localhost:3001
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules  # Anonymous volume for node_modules
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - oneshot-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  oneshot-network:
+    driver: bridge 

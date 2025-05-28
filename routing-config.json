@@ -1,0 +1,118 @@
+{
+  "rules": [
+    {
+      "name": "Simple Formatting Tasks",
+      "pattern": "/(format|indent|fix typo|add comment|rename|simple test)/i",
+      "model": "nano",
+      "priority": 100
+    },
+    {
+      "name": "Documentation Tasks",
+      "pattern": "/(write docs|add readme|update comments|documentation)/i",
+      "model": "micro",
+      "priority": 90
+    },
+    {
+      "name": "Basic CRUD Operations",
+      "pattern": "/(create endpoint|add route|simple api|basic component)/i",
+      "model": "micro",
+      "priority": 85
+    },
+    {
+      "name": "Architecture Tasks",
+      "pattern": "/(architect|design system|scale|performance|security review)/i",
+      "model": "power",
+      "priority": 95
+    },
+    {
+      "name": "Complex Features",
+      "pattern": "/(implement feature|complex logic|algorithm|optimization)/i",
+      "model": "standard",
+      "priority": 80
+    },
+    {
+      "name": "Infrastructure Tasks",
+      "pattern": "/(deploy|docker|ci\/cd|pipeline|infrastructure)/i",
+      "model": "standard",
+      "priority": 75
+    },
+    {
+      "name": "Emergency Fixes",
+      "pattern": "/(urgent|emergency|critical|hotfix|production down)/i",
+      "model": "power",
+      "priority": 110
+    },
+    {
+      "name": "Small File Edits",
+      "filePattern": "/\\.(json|md|txt|yml|yaml)$/i",
+      "model": "nano",
+      "priority": 70
+    },
+    {
+      "name": "TypeScript/JavaScript Files",
+      "filePattern": "/\\.(ts|tsx|js|jsx)$/i",
+      "model": "standard",
+      "priority": 60
+    },
+    {
+      "name": "Developer Mode",
+      "modePattern": "[DEVELOPER]",
+      "model": "standard",
+      "priority": 50
+    },
+    {
+      "name": "Operator Mode",
+      "modePattern": "[OPERATOR]",
+      "model": "standard",
+      "priority": 50
+    },
+    {
+      "name": "Architect Mode",
+      "modePattern": "[ARCHITECT]",
+      "model": "power",
+      "priority": 50
+    }
+  ],
+  "costLimits": {
+    "hourly": 5.0,
+    "daily": 25.0,
+    "monthly": 500.0
+  },
+  "performanceTargets": {
+    "maxLatency": 10000,
+    "minQuality": 0.7
+  },
+  "learningEnabled": true,
+  "modelMapping": {
+    "nano": {
+      "provider": "anthropic",
+      "model": "claude-3-haiku-20240307",
+      "costPer1KTokens": 0.00025,
+      "maxTokens": 4096
+    },
+    "micro": {
+      "provider": "openai", 
+      "model": "gpt-3.5-turbo",
+      "costPer1KTokens": 0.0015,
+      "maxTokens": 4096
+    },
+    "standard": {
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20241022",
+      "costPer1KTokens": 0.003,
+      "maxTokens": 8192
+    },
+    "power": {
+      "provider": "anthropic",
+      "model": "claude-3-opus-20240229",
+      "costPer1KTokens": 0.015,
+      "maxTokens": 4096
+    },
+    "ultra": {
+      "provider": "anthropic",
+      "model": "claude-3-opus-20240229",
+      "costPer1KTokens": 0.015,
+      "maxTokens": 4096
+    }
+  }
+} 

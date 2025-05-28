@@ -78,4 +78,13 @@ You are building a mobile-first, athlete-driven recruiting platform. This docume
 
 ---
 
+## 📊 PROGRESS TRACKING
+
+**For current implementation status and progress tracking, see:**
+- `OneShot-MVP-Progress.md` - **Single source of truth** for all development progress
+- **Status**: 🚀 **MVP COMPLETE & PRODUCTION LIVE** (95% complete)
+- **Live URL**: https://oneshotrecruits.com
+
+---
+
 This is your execution source of truth for all frontend/backend planning inside Cursor. Treat this as a foundational doc (equivalent to a `.cursor/doc`) and refer to it in all relevant tasks. 

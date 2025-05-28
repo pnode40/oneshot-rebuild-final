@@ -1,0 +1,22 @@
+{
+  "active": true,
+  "autoStart": true,
+  "costLimits": {
+    "daily": 25,
+    "monthly": 500
+  },
+  "alertThresholds": {
+    "dailyCostWarning": 20,
+    "monthlyCostWarning": 400
+  },
+  "optimization": {
+    "aggressiveMode": false,
+    "learningEnabled": true,
+    "qualityThreshold": 0.7
+  },
+  "monitoring": {
+    "enableDashboard": true,
+    "logLevel": "info",
+    "reportFrequency": "daily"
+  }
+}

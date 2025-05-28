@@ -21,7 +21,7 @@ You are Claude 4. Generate a markdown (.md) file with complete, context-aware do
 Context:
 - This is for the OneShot recruiting platform.
 - Documentation lives in `docs/track-a/`
-- All long-term context is loaded from `.md` files like `MVP-Progress.md`, `Roles-and-Responsibilities.md`, etc.
+- All long-term context is loaded from `.md` files like `OneShot-MVP-Progress.md`, `Roles-and-Responsibilities.md`, etc.
 
 Requirements:
 1. Do **not** leave any section blank or marked as TODO

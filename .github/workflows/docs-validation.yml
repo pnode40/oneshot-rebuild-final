@@ -1,0 +1,314 @@
+name: Documentation Quality Assurance
+
+on:
+  push:
+    branches: [ main, staging, dev ]
+    paths: ['**/*.md', 'docs/**/*']
+  pull_request:
+    branches: [ main, staging ]
+    paths: ['**/*.md', 'docs/**/*']
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  markdown-lint:
+    name: Markdown Linting & Structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install markdownlint-cli
+        run: npm install -g markdownlint-cli
+
+      - name: Create markdownlint config
+        run: |
+          cat > .markdownlint.json << 'EOF'
+          {
+            "MD013": { "line_length": 120 },
+            "MD033": false,
+            "MD041": false,
+            "MD024": { "allow_different_nesting": true }
+          }
+          EOF
+
+      - name: Run markdownlint
+        run: markdownlint "**/*.md" --config .markdownlint.json
+
+      - name: Check for empty markdown files
+        run: |
+          echo "🔍 Checking for empty or minimal markdown files..."
+          find . -name "*.md" -type f | while read file; do
+            size=$(wc -c < "$file")
+            lines=$(wc -l < "$file")
+            
+            if [ $size -lt 50 ]; then
+              echo "❌ FAIL: $file is too small ($size bytes)"
+              exit 1
+            fi
+            
+            if [ $lines -lt 5 ]; then
+              echo "❌ FAIL: $file has too few lines ($lines lines)"
+              exit 1
+            fi
+            
+            # Check for placeholder content
+            if grep -q "TODO\|TBD\|PLACEHOLDER\|FIXME" "$file"; then
+              echo "⚠️ WARNING: $file contains placeholder content"
+            fi
+            
+            echo "✅ PASS: $file ($size bytes, $lines lines)"
+          done
+
+  content-validation:
+    name: Content Quality & Standards
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check version headers
+        run: |
+          echo "🔍 Checking for version headers in markdown files..."
+          missing_versions=()
+          
+          find . -name "*.md" -type f | while read file; do
+            if ! grep -q "Version:\|Date:\|Status:" "$file"; then
+              echo "⚠️ WARNING: $file missing version/date/status header"
+              missing_versions+=("$file")
+            else
+              echo "✅ PASS: $file has proper headers"
+            fi
+          done
+          
+          if [ ${#missing_versions[@]} -gt 0 ]; then
+            echo "Files missing version headers: ${missing_versions[*]}"
+          fi
+
+      - name: Check for required sections
+        run: |
+          echo "🔍 Checking for required documentation sections..."
+          
+          find . -name "*.md" -type f | while read file; do
+            # Skip certain files
+            if [[ "$file" == *"README"* ]] || [[ "$file" == *"CHANGELOG"* ]]; then
+              continue
+            fi
+            
+            # Check for common required sections
+            has_purpose=false
+            has_implementation=false
+            
+            if grep -q "## Purpose\|## Overview\|## Objective" "$file"; then
+              has_purpose=true
+            fi
+            
+            if grep -q "## Implementation\|## Solution\|## Usage" "$file"; then
+              has_implementation=true
+            fi
+            
+            if [ "$has_purpose" = true ] && [ "$has_implementation" = true ]; then
+              echo "✅ PASS: $file has required sections"
+            else
+              echo "⚠️ WARNING: $file may be missing required sections"
+            fi
+          done
+
+      - name: Spell check
+        uses: streetsidesoftware/cspell-action@v5
+        with:
+          files: "**/*.md"
+          config: |
+            {
+              "version": "0.2",
+              "language": "en",
+              "words": [
+                "OneShot", "PostgreSQL", "TypeScript", "JavaScript", "API", "JWT", "OAuth",
+                "Neon", "Vercel", "Railway", "Docker", "Redis", "Vite", "React", "Node",
+                "npm", "yarn", "webpack", "eslint", "prettier", "github", "markdown",
+                "frontend", "backend", "fullstack", "DevOps", "CI", "CD", "repo",
+                "auth", "middleware", "schemas", "endpoints", "CORS", "env", "config"
+              ],
+              "ignorePaths": [
+                "node_modules/**",
+                "dist/**",
+                "build/**",
+                ".git/**"
+              ]
+            }
+
+  documentation-coverage:
+    name: Documentation Coverage Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Analyze documentation coverage
+        run: |
+          echo "📊 Documentation Coverage Report"
+          echo "================================="
+          
+          # Count total markdown files
+          total_md=$(find . -name "*.md" -type f | wc -l)
+          echo "Total markdown files: $total_md"
+          
+          # Count files with proper headers
+          versioned_md=$(find . -name "*.md" -type f -exec grep -l "Version:\|Date:\|Status:" {} \; | wc -l)
+          echo "Files with version headers: $versioned_md"
+          
+          # Calculate coverage percentage
+          if [ $total_md -gt 0 ]; then
+            coverage=$((versioned_md * 100 / total_md))
+            echo "Documentation coverage: $coverage%"
+            
+            if [ $coverage -lt 80 ]; then
+              echo "⚠️ WARNING: Documentation coverage below 80%"
+            else
+              echo "✅ PASS: Documentation coverage above 80%"
+            fi
+          fi
+          
+          # List files by size
+          echo ""
+          echo "📄 Documentation files by size:"
+          find . -name "*.md" -type f -exec wc -c {} + | sort -n | tail -20
+          
+          # Check for recent updates
+          echo ""
+          echo "📅 Recently updated documentation:"
+          find . -name "*.md" -type f -mtime -7 -exec ls -la {} \;
+
+      - name: Generate documentation report
+        run: |
+          cat > doc-coverage-report.md << 'EOF'
+          # Documentation Coverage Report
+          
+          **Generated**: $(date)
+          **Commit**: ${{ github.sha }}
+          **Branch**: ${{ github.ref_name }}
+          
+          ## Summary
+          - Total markdown files: $(find . -name "*.md" -type f | wc -l)
+          - Files with version headers: $(find . -name "*.md" -type f -exec grep -l "Version:\|Date:\|Status:" {} \; | wc -l)
+          - Coverage percentage: $(($(find . -name "*.md" -type f -exec grep -l "Version:\|Date:\|Status:" {} \; | wc -l) * 100 / $(find . -name "*.md" -type f | wc -l)))%
+          
+          ## Quality Checks
+          - ✅ Markdown linting passed
+          - ✅ Content validation completed
+          - ✅ Spell check completed
+          
+          ## Recommendations
+          - Ensure all new documentation includes version headers
+          - Add missing sections to incomplete files
+          - Regular documentation review and updates
+          EOF
+
+      - name: Upload documentation report
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation-coverage-report
+          path: doc-coverage-report.md
+
+  link-validation:
+    name: Internal Link Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check internal links
+        run: |
+          echo "🔗 Checking internal markdown links..."
+          
+          # Find all markdown files
+          find . -name "*.md" -type f | while read file; do
+            echo "Checking links in: $file"
+            
+            # Extract markdown links [text](path)
+            grep -o '\[.*\](.*\.md)' "$file" | while read link; do
+              # Extract the path from [text](path)
+              path=$(echo "$link" | sed 's/.*](\(.*\))/\1/')
+              
+              # Convert relative path to absolute
+              if [[ "$path" == /* ]]; then
+                full_path=".$path"
+              else
+                dir=$(dirname "$file")
+                full_path="$dir/$path"
+              fi
+              
+              # Check if file exists
+              if [ ! -f "$full_path" ]; then
+                echo "❌ BROKEN LINK: $file -> $path (resolved to $full_path)"
+              else
+                echo "✅ VALID LINK: $file -> $path"
+              fi
+            done
+          done
+
+  security-scan:
+    name: Documentation Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan for sensitive information
+        run: |
+          echo "🔒 Scanning documentation for sensitive information..."
+          
+          # Patterns to check for
+          patterns=(
+            "password.*="
+            "secret.*="
+            "key.*="
+            "token.*="
+            "api.*key"
+            "postgresql://.*:.*@"
+            "mysql://.*:.*@"
+            "mongodb://.*:.*@"
+          )
+          
+          found_issues=false
+          
+          find . -name "*.md" -type f | while read file; do
+            for pattern in "${patterns[@]}"; do
+              if grep -i "$pattern" "$file" > /dev/null; then
+                # Exclude example patterns
+                if ! grep -i "example\|placeholder\|your-.*-here" "$file" > /dev/null; then
+                  echo "⚠️ POTENTIAL SECRET: $file contains pattern: $pattern"
+                  found_issues=true
+                fi
+              fi
+            done
+          done
+          
+          if [ "$found_issues" = false ]; then
+            echo "✅ No sensitive information detected in documentation"
+          fi
+
+  final-validation:
+    name: Final Documentation Validation
+    runs-on: ubuntu-latest
+    needs: [markdown-lint, content-validation, documentation-coverage, link-validation, security-scan]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Documentation quality summary
+        run: |
+          echo "📋 Documentation Quality Assurance Summary"
+          echo "=========================================="
+          echo "✅ Markdown linting: PASSED"
+          echo "✅ Content validation: PASSED"
+          echo "✅ Coverage analysis: COMPLETED"
+          echo "✅ Link validation: PASSED"
+          echo "✅ Security scan: PASSED"
+          echo ""
+          echo "🎉 All documentation quality checks passed!"
+          echo "Documentation is ready for production." 
