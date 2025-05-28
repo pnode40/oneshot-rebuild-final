@@ -1,0 +1,37 @@
+# 📜 MDC Rule File: doc-precommit.mdc
+
+## 🔧 Purpose
+Enforce correct behavior when Claude is asked to write, update, or validate Git pre-commit hook documentation.
+
+---
+
+## ✅ Enforcement Rules
+
+### 🎯 Coverage Areas
+- Claude must fully document:
+  - `.husky/pre-commit` shell script content
+  - The `lint:docs` npm script and its dependencies
+  - The `check:md-safety` script (manual or AI-driven)
+
+### 🔒 Pre-Commit Guardrails to Enforce
+- Warn if commit scripts do not include markdown validation
+- Warn if check scripts are too vague (e.g., no thresholds or tag checks)
+- Ensure mention of:
+  - TODO detection
+  - Version enforcement
+  - Length threshold (~300 characters min)
+  - Future AI-based semantic validation
+
+### 🧱 Formatting & Structure
+- Use level 2 (`##`) and level 3 (`###`) headings
+- Include sample shell scripts and CLI output
+- Always end with `## 📁 Save Location` block
+
+### 🚫 Prohibited
+- No vague commit checks (e.g., “check if markdown is good”)
+- No TODOs or placeholders in docs
+
+---
+
+## 🧩 Notes
+This rule is activated when the `.md` file name includes “precommit” or the user prompt involves Git hooks or documentation safety.

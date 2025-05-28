@@ -15,9 +15,12 @@ import {
   CalendarIcon,
   UserIcon,
   LinkIcon,
-  QrCodeIcon
+  QrCodeIcon,
+  UserGroupIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
+import { FaInstagram } from 'react-icons/fa';
 
 interface PublicProfile {
   id: number;
@@ -50,6 +53,7 @@ interface PublicProfile {
     favorites: number;
     shares: number;
   };
+  generatedOgImageUrl?: string;
 }
 
 interface ProfileAnalytics {
@@ -85,6 +89,26 @@ const PublicProfileEnhanced: React.FC = () => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareCount, setShareCount] = useState(0);
+  
+  // Detect if this is social media traffic
+  const isSocialTraffic = () => {
+    const referrer = document.referrer.toLowerCase();
+    const urlParams = new URLSearchParams(location.search);
+    const refParam = urlParams.get('ref')?.toLowerCase();
+    
+    const socialDomains = [
+      'facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com', 
+      'tiktok.com', 'snapchat.com', 'discord.com', 'reddit.com'
+    ];
+    
+    const socialRefs = ['social', 'share', 'viral', 'buddy'];
+    
+    return socialDomains.some(domain => referrer.includes(domain)) ||
+           socialRefs.some(ref => refParam?.includes(ref)) ||
+           urlParams.get('utm_source') === 'social';
+  };
+
+  const isFromSocial = isSocialTraffic();
   
   const { 
     data: profile, 
@@ -144,23 +168,30 @@ const PublicProfileEnhanced: React.FC = () => {
     const title = profile?.firstName && profile?.lastName 
       ? `${profile.firstName} ${profile.lastName} - ${profile.position}` 
       : `${profile?.schoolName} - ${profile?.position}`;
-    const text = `Check out ${title} on OneShot!`;
+    
+    // Enhanced social messaging for viral sharing
+    const socialText = isFromSocial 
+      ? `🏈 Check out my teammate ${title} on OneShot! This kid is going places 🔥` 
+      : `Check out ${title} on OneShot!`;
 
     let shareUrl = '';
     
     switch (platform) {
       case 'twitter':
-        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(socialText)}&url=${encodeURIComponent(url)}&hashtags=OneShot,Recruiting,Football`;
         break;
       case 'facebook':
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(socialText)}`;
         break;
-      case 'linkedin':
-        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-        break;
+      case 'instagram':
+        // Instagram doesn't support direct sharing, copy link instead
+        await navigator.clipboard.writeText(`${socialText} ${url}`);
+        alert('Caption and link copied! Paste in your Instagram story or post.');
+        return;
       case 'copy':
-        await navigator.clipboard.writeText(url);
-        alert('Link copied to clipboard!');
+        const copyText = isFromSocial ? `${socialText} ${url}` : url;
+        await navigator.clipboard.writeText(copyText);
+        alert(isFromSocial ? 'Message and link copied!' : 'Link copied to clipboard!');
         return;
       case 'qr':
         // Generate QR code (would need QR code library)
@@ -171,6 +202,24 @@ const PublicProfileEnhanced: React.FC = () => {
     if (shareUrl) {
       window.open(shareUrl, '_blank', 'width=600,height=400');
       setShareCount(prev => prev + 1);
+      
+      // Track viral sharing
+      if (isFromSocial) {
+        trackViralShare(slug as string, platform);
+      }
+    }
+  };
+
+  const trackViralShare = async (slug: string, platform: string) => {
+    try {
+      await axios.post(`/api/v1/analytics/viral-share`, {
+        slug,
+        platform,
+        referrer: document.referrer,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.log('Viral share tracking failed:', error);
     }
   };
 
@@ -228,19 +277,19 @@ const PublicProfileEnhanced: React.FC = () => {
         <meta name="description" content={profileDescription} />
         <meta name="keywords" content={`${profile.sport || 'football'}, ${profile.position}, ${profile.schoolName}, recruiting, athlete, ${profile.graduationYear}`} />
         
-        {/* Open Graph Tags */}
-        <meta property="og:title" content={`${profileTitle} - ${profile.position}`} />
-        <meta property="og:description" content={profileDescription} />
-        <meta property="og:image" content={profile.profilePhotoUrl || '/default-athlete.jpg'} />
+        {/* Enhanced Open Graph for Social */}
+        <meta property="og:title" content={`🏈 ${profileTitle} - ${profile.position}`} />
+        <meta property="og:description" content={`${profileDescription} | See stats, highlights, and more on OneShot!`} />
+        <meta property="og:image" content={profile.generatedOgImageUrl || profile.profilePhotoUrl || '/default-athlete.jpg'} />
         <meta property="og:url" content={window.location.href} />
         <meta property="og:type" content="profile" />
         <meta property="og:site_name" content="OneShot" />
         
         {/* Twitter Card Tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${profileTitle} - ${profile.position}`} />
-        <meta name="twitter:description" content={profileDescription} />
-        <meta name="twitter:image" content={profile.profilePhotoUrl || '/default-athlete.jpg'} />
+        <meta name="twitter:title" content={`🏈 ${profileTitle} - ${profile.position}`} />
+        <meta name="twitter:description" content={`${profileDescription} | See stats, highlights, and more on OneShot!`} />
+        <meta name="twitter:image" content={profile.generatedOgImageUrl || profile.profilePhotoUrl || '/default-athlete.jpg'} />
         
         {/* Structured Data */}
         <script type="application/ld+json">
@@ -250,6 +299,18 @@ const PublicProfileEnhanced: React.FC = () => {
 
       <div className="min-h-screen bg-gradient-to-br from-[#0a1128] via-[#1a2332] to-[#0a1128] py-8 px-4">
         <div className="max-w-4xl mx-auto">
+          
+          {/* Social Traffic Banner */}
+          {isFromSocial && (
+            <div className="bg-gradient-to-r from-[#ff6b35] to-[#00c2ff] rounded-2xl p-4 mb-6 text-center">
+              <div className="flex items-center justify-center gap-2 text-white font-bold">
+                <SparklesIcon className="w-5 h-5" />
+                <span>Shared by a teammate! Help spread the word 🔥</span>
+                <SparklesIcon className="w-5 h-5" />
+              </div>
+            </div>
+          )}
+
           {/* Header Section */}
           <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 mb-8 border border-white/20">
             <div className="flex flex-col lg:flex-row items-center gap-8">
@@ -306,7 +367,7 @@ const PublicProfileEnhanced: React.FC = () => {
                   )}
                 </div>
                 
-                {/* Action Buttons */}
+                {/* Action Buttons - Enhanced for Social */}
                 <div className="flex flex-wrap justify-center lg:justify-start gap-3">
                   <button
                     onClick={toggleFavorite}
@@ -324,13 +385,29 @@ const PublicProfileEnhanced: React.FC = () => {
                     Favorite
                   </button>
                   
+                  {/* Enhanced Share Button for Social Traffic */}
                   <button
                     onClick={() => setShowShareModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#00c2ff] text-white rounded-full hover:bg-[#00a8d6] transition-all"
+                    className={`flex items-center gap-2 px-6 py-2 rounded-full transition-all ${
+                      isFromSocial 
+                        ? 'bg-gradient-to-r from-[#ff6b35] to-[#00c2ff] text-white shadow-lg animate-pulse' 
+                        : 'bg-[#00c2ff] text-white hover:bg-[#00a8d6]'
+                    }`}
                   >
                     <ShareIcon className="w-5 h-5" />
-                    Share
+                    {isFromSocial ? 'Share with Friends!' : 'Share'}
                   </button>
+                  
+                  {/* QR Code Button - Hidden for Social Traffic */}
+                  {!isFromSocial && (
+                    <button
+                      onClick={() => handleShare('qr')}
+                      className="flex items-center gap-2 px-4 py-2 bg-white/20 text-white rounded-full hover:bg-white/30 transition-all"
+                    >
+                      <QrCodeIcon className="w-5 h-5" />
+                      QR Code
+                    </button>
+                  )}
                   
                   <div className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white rounded-full">
                     <EyeIcon className="w-5 h-5" />
@@ -340,6 +417,35 @@ const PublicProfileEnhanced: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Viral Sharing Encouragement - Only for Social Traffic */}
+          {isFromSocial && (
+            <div className="bg-gradient-to-r from-[#00c2ff]/20 to-[#ff6b35]/20 backdrop-blur-lg rounded-3xl p-6 mb-8 border border-white/20">
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-white mb-3 flex items-center justify-center gap-2">
+                  <UserGroupIcon className="w-6 h-6" />
+                  Know other talented athletes?
+                </h3>
+                <p className="text-[#e0e0e0] mb-4">
+                  Help your teammates get discovered! Share their OneShot profiles and build your network together.
+                </p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="bg-gradient-to-r from-[#ff6b35] to-[#00c2ff] text-white px-6 py-3 rounded-full font-bold hover:shadow-lg transition-all"
+                  >
+                    🔥 Share This Profile
+                  </button>
+                  <a
+                    href="/register"
+                    className="bg-white/20 text-white px-6 py-3 rounded-full font-bold hover:bg-white/30 transition-all"
+                  >
+                    Create Your Profile
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Bio Section */}
           {profile.bio && (
@@ -442,24 +548,39 @@ const PublicProfileEnhanced: React.FC = () => {
             </div>
           )}
 
-          {/* Footer */}
+          {/* Footer - Enhanced for Social */}
           <div className="text-center py-8">
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 inline-block">
               <p className="text-[#e0e0e0] mb-2">
                 Powered by <span className="text-[#00c2ff] font-bold">OneShot</span>
               </p>
-              <p className="text-sm text-[#a0a0a0]">
+              <p className="text-sm text-[#a0a0a0] mb-3">
                 Building the future of athletic recruiting
               </p>
+              {isFromSocial && (
+                <a
+                  href="/register"
+                  className="inline-block bg-gradient-to-r from-[#ff6b35] to-[#00c2ff] text-white px-4 py-2 rounded-full text-sm font-bold hover:shadow-lg transition-all"
+                >
+                  Create Your Free Profile
+                </a>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Share Modal */}
+        {/* Enhanced Share Modal for Social Traffic */}
         {showShareModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl p-8 max-w-md w-full">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Share Profile</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">
+                {isFromSocial ? '🔥 Spread the Word!' : 'Share Profile'}
+              </h3>
+              {isFromSocial && (
+                <p className="text-gray-600 text-center mb-6">
+                  Help your teammate get discovered by college recruiters!
+                </p>
+              )}
               
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <button
@@ -477,10 +598,11 @@ const PublicProfileEnhanced: React.FC = () => {
                 </button>
                 
                 <button
-                  onClick={() => handleShare('linkedin')}
-                  className="flex items-center justify-center gap-2 p-4 bg-blue-700 text-white rounded-2xl hover:bg-blue-800 transition-all"
+                  onClick={() => handleShare('instagram')}
+                  className="flex items-center justify-center gap-2 p-4 bg-pink-500 text-white rounded-2xl hover:bg-pink-600 transition-all"
                 >
-                  LinkedIn
+                  <FaInstagram className="w-5 h-5" />
+                  Instagram
                 </button>
                 
                 <button
@@ -488,9 +610,17 @@ const PublicProfileEnhanced: React.FC = () => {
                   className="flex items-center justify-center gap-2 p-4 bg-gray-600 text-white rounded-2xl hover:bg-gray-700 transition-all"
                 >
                   <LinkIcon className="w-5 h-5" />
-                  Copy Link
+                  {isFromSocial ? 'Copy Message' : 'Copy Link'}
                 </button>
               </div>
+              
+              {isFromSocial && (
+                <div className="bg-gray-100 rounded-2xl p-4 mb-4">
+                  <p className="text-sm text-gray-600 text-center">
+                    💡 <strong>Pro tip:</strong> Tag your teammate when you share so they know you've got their back!
+                  </p>
+                </div>
+              )}
               
               <button
                 onClick={() => setShowShareModal(false)}

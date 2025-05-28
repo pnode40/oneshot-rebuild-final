@@ -1,0 +1,34 @@
+# 📜 MDC Rule File: doc-ci.mdc
+
+## 🔧 Purpose
+Ensure Claude generates and validates documentation about markdown linting, safety checks, and CI configuration according to OneShot protocols.
+
+---
+
+## ✅ Enforcement Rules
+
+### 🧠 Required Context Files
+- Must reference `CI-Workflow-Docs.md` if updating
+- Must load `Prompt-Templates.md` and `PreCommit-Hooks.md` for dependencies
+
+### 📋 Required Sections in `.md` CI Docs
+- GitHub Actions config block (`.github/workflows/validate-docs.yml`)
+- Markdown validation criteria (linting, safety, tag enforcement)
+- Future AI validation hook notes
+- Scripts required (`lint:docs`, `check:md-safety`)
+- Save location declaration block at bottom
+
+### 📦 Enforcement Checks
+Claude must:
+- Include full YAML block for GitHub workflow
+- Mention use of `markdownlint-cli` or equivalent
+- Document minimum length and tag/checklist requirements
+
+### 🚫 Prohibited
+- No vague references to “run CI” or “check docs”
+- No TODOs, incomplete YAML, or placeholder scripts
+
+---
+
+## 🧩 Notes
+Triggers when CI, GitHub Actions, or markdown validation is mentioned in the prompt or filename.

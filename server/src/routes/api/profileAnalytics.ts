@@ -265,6 +265,50 @@ router.post('/profile-favorite',
 );
 
 /**
+ * POST /api/v1/analytics/viral-share
+ * Track viral sharing from social media traffic
+ */
+router.post('/viral-share',
+  validateRequest({
+    body: z.object({
+      slug: z.string().min(1),
+      platform: z.string().min(1),
+      referrer: z.string().optional(),
+      timestamp: z.string().datetime().optional()
+    })
+  }),
+  async (req, res) => {
+    try {
+      const { slug, platform, referrer, timestamp } = req.body;
+      
+      // In a real implementation, you would:
+      // 1. Validate the profile exists
+      // 2. Store the viral share event with social context
+      // 3. Update viral sharing metrics
+      // 4. Track buddy-sharing patterns for growth analytics
+      // 5. Potentially reward the original sharer
+      
+      console.log(`Viral share tracked: ${slug} on ${platform} from ${referrer || 'unknown'}`);
+      
+      res.json({
+        success: true,
+        message: 'Viral share tracked successfully',
+        data: {
+          viralBonus: true, // Could be used for gamification
+          networkEffect: 'positive' // Track network growth
+        }
+      });
+    } catch (error) {
+      console.error('Error tracking viral share:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to track viral share'
+      });
+    }
+  }
+);
+
+/**
  * GET /api/v1/analytics/profile/:slug/summary
  * Get a quick summary of profile analytics
  */

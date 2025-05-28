@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Cost Optimization Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .savings { color: #10b981; }
+        .requests { color: #3b82f6; }
+        .efficiency { color: #8b5cf6; }
+        .cost { color: #f59e0b; }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .recommendations {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .recommendation {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        
+        .recommendation.high {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+        
+        .recommendation.medium {
+            background: #fffbeb;
+            border-color: #f59e0b;
+        }
+        
+        .recommendation.low {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active { background: #10b981; }
+        .status-inactive { background: #ef4444; }
+        
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+        }
+        
+        .btn.danger {
+            background: #ef4444;
+        }
+        
+        .btn.danger:hover {
+            background: #dc2626;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>🎯 Claude Cost Optimization Dashboard</h1>
+            <p>Real-time monitoring of AI model routing and cost savings</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value savings" id="totalSavings">$0.00</div>
+                <div class="stat-label">Total Cost Saved</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value requests" id="totalRequests">0</div>
+                <div class="stat-label">Total Requests</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value efficiency" id="efficiency">0%</div>
+                <div class="stat-label">Cost Efficiency</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value cost" id="avgCost">$0.000</div>
+                <div class="stat-label">Avg Cost/Request</div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Model Usage Distribution</div>
+                <canvas id="modelChart" width="400" height="300"></canvas>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">Cost Savings Over Time</div>
+                <canvas id="savingsChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+        
+        <div class="recommendations">
+            <h3 class="chart-title">
+                <span class="status-indicator status-active" id="statusIndicator"></span>
+                System Status & Recommendations
+            </h3>
+            <div id="recommendationsList">
+                <div class="recommendation low">
+                    <strong>System Active:</strong> Cost optimization is running and saving money!
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="refreshData()">🔄 Refresh Data</button>
+            <button class="btn" onclick="downloadReport()">📊 Download Report</button>
+            <button class="btn danger" onclick="toggleRouter()" id="toggleBtn">⏸️ Pause Router</button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for charts
+        let modelChart, savingsChart;
+        let isRouterActive = true;
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadData();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(loadData, 30000);
+        });
+        
+        // Initialize Chart.js charts
+        function initializeCharts() {
+            // Model Usage Chart
+            const modelCtx = document.getElementById('modelChart').getContext('2d');
+            modelChart = new Chart(modelCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Nano', 'Micro', 'Standard', 'Power', 'Ultra'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            '#10b981',
+                            '#3b82f6',
+                            '#8b5cf6',
+                            '#f59e0b',
+                            '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Savings Chart
+            const savingsCtx = document.getElementById('savingsChart').getContext('2d');
+            savingsChart = new Chart(savingsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Cumulative Savings',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toFixed(3);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load data from the auto-router
+        async function loadData() {
+            try {
+                // In a real implementation, this would fetch from your router API
+                // For demo purposes, we'll simulate data
+                const data = generateMockData();
+                
+                updateStats(data);
+                updateCharts(data);
+                updateRecommendations(data);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+        
+        // Generate mock data for demonstration
+        function generateMockData() {
+            const totalRequests = Math.floor(Math.random() * 1000) + 500;
+            const costSaved = Math.random() * 50 + 10;
+            
+            return {
+                summary: {
+                    totalRequests,
+                    totalCostSaved: costSaved,
+                    averageSavingsPerRequest: costSaved / totalRequests,
+                    savingsPercentage: Math.floor(Math.random() * 30) + 70
+                },
+                modelDistribution: {
+                    nano: Math.floor(Math.random() * 200) + 100,
+                    micro: Math.floor(Math.random() * 150) + 75,
+                    standard: Math.floor(Math.random() * 300) + 200,
+                    power: Math.floor(Math.random() * 100) + 50,
+                    ultra: Math.floor(Math.random() * 20) + 5
+                },
+                recommendations: [
+                    {
+                        type: 'cost-optimization',
+                        message: '15.2% of requests use POWER tier. Consider reviewing task complexity.',
+                        impact: 'medium'
+                    },
+                    {
+                        type: 'efficiency',
+                        message: 'Excellent nano tier usage at 35.4% - keep it up!',
+                        impact: 'low'
+                    }
+                ]
+            };
+        }
+        
+        // Update statistics display
+        function updateStats(data) {
+            document.getElementById('totalSavings').textContent = '$' + data.summary.totalCostSaved.toFixed(2);
+            document.getElementById('totalRequests').textContent = data.summary.totalRequests.toLocaleString();
+            document.getElementById('efficiency').textContent = data.summary.savingsPercentage + '%';
+            document.getElementById('avgCost').textContent = '$' + data.summary.averageSavingsPerRequest.toFixed(6);
+        }
+        
+        // Update charts with new data
+        function updateCharts(data) {
+            // Update model distribution chart
+            const modelData = [
+                data.modelDistribution.nano || 0,
+                data.modelDistribution.micro || 0,
+                data.modelDistribution.standard || 0,
+                data.modelDistribution.power || 0,
+                data.modelDistribution.ultra || 0
+            ];
+            
+            modelChart.data.datasets[0].data = modelData;
+            modelChart.update();
+            
+            // Update savings chart (simulate time series)
+            const now = new Date();
+            const timeLabel = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0');
+            
+            if (savingsChart.data.labels.length > 10) {
+                savingsChart.data.labels.shift();
+                savingsChart.data.datasets[0].data.shift();
+            }
+            
+            savingsChart.data.labels.push(timeLabel);
+            savingsChart.data.datasets[0].data.push(data.summary.totalCostSaved);
+            savingsChart.update();
+        }
+        
+        // Update recommendations
+        function updateRecommendations(data) {
+            const container = document.getElementById('recommendationsList');
+            container.innerHTML = '';
+            
+            // Add system status
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `recommendation ${isRouterActive ? 'low' : 'high'}`;
+            statusDiv.innerHTML = `<strong>System Status:</strong> Router is ${isRouterActive ? 'ACTIVE' : 'PAUSED'} - ${isRouterActive ? 'Optimizing costs automatically' : 'Manual mode - no optimization'}`;
+            container.appendChild(statusDiv);
+            
+            // Add recommendations
+            data.recommendations.forEach(rec => {
+                const div = document.createElement('div');
+                div.className = `recommendation ${rec.impact}`;
+                div.innerHTML = `<strong>${rec.type}:</strong> ${rec.message}`;
+                container.appendChild(div);
+            });
+        }
+        
+        // Control functions
+        function refreshData() {
+            loadData();
+        }
+        
+        function downloadReport() {
+            // Generate and download a CSV report
+            const data = generateMockData();
+            const csv = generateCSVReport(data);
+            downloadCSV(csv, 'cost-optimization-report.csv');
+        }
+        
+        function toggleRouter() {
+            isRouterActive = !isRouterActive;
+            const btn = document.getElementById('toggleBtn');
+            const indicator = document.getElementById('statusIndicator');
+            
+            if (isRouterActive) {
+                btn.textContent = '⏸️ Pause Router';
+                btn.className = 'btn danger';
+                indicator.className = 'status-indicator status-active';
+            } else {
+                btn.textContent = '▶️ Resume Router';
+                btn.className = 'btn';
+                indicator.className = 'status-indicator status-inactive';
+            }
+            
+            loadData(); // Refresh to show status change
+        }
+        
+        // Utility functions
+        function generateCSVReport(data) {
+            const headers = ['Metric', 'Value'];
+            const rows = [
+                ['Total Requests', data.summary.totalRequests],
+                ['Total Cost Saved', '$' + data.summary.totalCostSaved.toFixed(2)],
+                ['Savings Percentage', data.summary.savingsPercentage + '%'],
+                ['Average Cost per Request', '$' + data.summary.averageSavingsPerRequest.toFixed(6)],
+                ['Nano Usage', data.modelDistribution.nano],
+                ['Micro Usage', data.modelDistribution.micro],
+                ['Standard Usage', data.modelDistribution.standard],
+                ['Power Usage', data.modelDistribution.power],
+                ['Ultra Usage', data.modelDistribution.ultra]
+            ];
+            
+            return [headers, ...rows].map(row => row.join(',')).join('\n');
+        }
+        
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html> 

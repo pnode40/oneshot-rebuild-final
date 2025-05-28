@@ -1,0 +1,34 @@
+# 📜 MDC Rule File: doc-versioning.mdc
+
+## 🔧 Purpose
+Ensure Claude enforces version tag conventions and version-content alignment when creating or updating any `.md` file.
+
+---
+
+## ✅ Enforcement Rules
+
+### 📎 Required in Every Markdown File
+- A version tag at the top in the format:
+  `Version: A-YYYY-MM-DD-###`
+
+### 📋 Version Tag Enforcement
+- Claude must:
+  - Reject or warn if no version tag is present
+  - Require tag update only if content has changed
+  - Use YYYY-MM-DD of session, and increment sprint ID
+- Must support tracking per Track A (prefix `A-`)
+
+### 🔄 Version ↔ Code Commit Linkage
+- When generating or updating `.md`, Claude should:
+  - Prompt user to reference the version in commit body
+  - Remind that all `.md` file changes must reflect latest sprint
+
+### 🚫 Prohibited
+- No outdated version tags
+- No doc file without version declaration
+- No incremental edits without version bump
+
+---
+
+## 🧩 Notes
+Triggers whenever Claude handles `.md` versioning, sprint logging, or file audit prompts.

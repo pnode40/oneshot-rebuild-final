@@ -47,11 +47,11 @@ Chronological log of key sessions, commits, and architecture decisions using the
 ## 🗓️ 2025-05-27 — Context Recovery
 **Focus:** Restore missing .md boot files for Claude + ChatGPT  
 **Highlights:**
-- Rebuilt `OneShot-ChatGPT-Context.md`, `MVP-Progress.md`, `Session-Logs.md`
+- Rebuilt `OneShot-ChatGPT-Context.md`, `Session-Logs.md`
 - Confirmed `.cursor/` was not being read by Claude 4
 - Boot protocol now restored using `docs/track-a/*.md`
 
 ---
 
 🧠 All sessions follow Define → Prompt → Generate → Verify → Commit loop.  
-Use `MVP-Progress.md` for scope tracking and sprint validation.
+Use `OneShot-MVP-Progress.md` for scope tracking and sprint validation.

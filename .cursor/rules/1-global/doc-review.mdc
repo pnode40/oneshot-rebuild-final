@@ -1,0 +1,40 @@
+# 📜 MDC Rule File: doc-review.mdc
+
+## 🔧 Purpose
+Ensure Claude prepares markdown review workflows, summaries, and sign-off protocols that meet OneShot’s documentation safety standards.
+
+---
+
+## ✅ Enforcement Rules
+
+### 📋 Required Content in Review Docs
+- Trigger conditions (when `.md` file changes trigger review)
+- Dual-review steps (Claude + Eric)
+- Claude-generated summary template
+- Manual checklist enforcement
+- Merge block until verification
+
+### 🧠 Claude's Review Summary Template
+Claude must always include:
+```
+## 🧠 AI Review Summary (Claude 4)
+- Files changed: [...]
+- Version updated? Yes/No
+- Checklist present and filled? Yes/No
+- Detected issues: [...]
+- Suggested improvements: [...]
+```
+
+### 📦 Structural Requirements
+- Use headings: Overview, Process, Template, Enhancements
+- Close with “Save Location” section
+
+### 🚫 Prohibited
+- No vague review steps like “make sure it's good”
+- No missing checklist enforcement
+- No empty summary blocks
+
+---
+
+## 🧩 Notes
+Triggers when reviewing `.md` files, prompting Claude to draft or validate review workflows for human+AI oversight.

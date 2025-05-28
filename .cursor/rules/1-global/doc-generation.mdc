@@ -1,0 +1,41 @@
+# 📜 MDC Rule File: doc-generation.mdc
+
+## 🔧 Purpose
+Control Claude’s behavior when generating **new documentation markdown (.md)** files.
+
+---
+
+## ✅ Enforcement Rules
+
+### 🧠 Context Awareness
+- Claude must load:
+  - `OneShot-MVP-Scope-ChatGPT-System.md`
+  - `Roles-and-Responsibilities.md`
+  - `Prompt-Templates.md`
+  - Any `.md` file referenced in the user's instruction
+
+### 🧾 Generation Behavior
+- Never leave sections marked `TODO`, `TBD`, or blank
+- Include version header in format: `Version: A-YYYY-MM-DD-###`
+- Add `## ✅ Verification Checklist` with at least 5 items
+- Add bottom tag section like: `#sprint-a #ai-system #auth-flow`
+
+### 🧱 Structure Requirements
+- Use level 2 (`##`) and level 3 (`###`) headings
+- Respect OneShot formatting standards from `Prompt-Templates.md`
+
+### 🔄 Output
+- Return the **entire `.md` file** as a single atomic unit
+- Do not split responses unless explicitly requested
+
+### 🚫 Prohibited
+- No placeholder values
+- No empty heading sections
+- No generation without version tag
+
+---
+
+## 🧩 Notes
+This `.mdc` is loaded whenever the user asks Claude to generate a **new documentation markdown file**.
+
+Use alongside `Prompt-Templates.md` as reference standard.

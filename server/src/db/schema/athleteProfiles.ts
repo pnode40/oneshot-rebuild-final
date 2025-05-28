@@ -106,6 +106,18 @@ export const athleteProfiles = pgTable('athlete_profiles', {
   featuredVideoType: varchar('featured_video_type', { length: 20 }), // 'youtube' or 'hudl'
   featuredVideoThumbnail: text('featured_video_thumbnail'),
   
+  // Action Photos for OG Image Generation
+  actionPhotos: jsonb('action_photos'), // Array of photo objects with metadata
+  selectedOgPhotoId: varchar('selected_og_photo_id', { length: 100 }), // ID of photo selected for OG image
+  generatedOgImageUrl: text('generated_og_image_url'), // URL of generated OG image
+  ogImageLastGenerated: timestamp('og_image_last_generated', { withTimezone: true }),
+  
+  // Social Media Links
+  socialMediaLinks: jsonb('social_media_links'), // Twitter, Instagram, TikTok, etc.
+  
+  // Bio/Description
+  bio: text('bio'),
+  
   // Visibility Controls (field-level)
   showHeight: boolean('show_height').default(true).notNull(),
   showWeight: boolean('show_weight').default(true).notNull(),

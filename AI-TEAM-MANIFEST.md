@@ -43,17 +43,34 @@
 - Task completion status
 - Technical constraints
 
-## Proposed Addition: The Operator
+## Current Addition: The Operator
 
-### 🔧 AI Operator - Infrastructure & DevOps Specialist
-**Purpose**: Ensure reliable development and deployment infrastructure
+### 🔧 AI Operator - DevOps & Infrastructure Specialist
+
+**Mission**:
+Ensure the development and deployment environment is:
+- Portable
+- Repeatable
+- Cross-platform
+- Self-recovering
+
 **Responsibilities**:
+- Create idempotent PowerShell startup scripts
+- Replace brittle `&&` chains with environment-agnostic flows
+- Manage `.env` validation and guardrails
+- Build deploy pipelines (e.g., Render, Railway, Fly.io)
+- Track system state and startup logic in Markdown
+- Define environment versioning (dev, staging, prod)
 - Environment setup automation
-- Cross-platform compatibility
-- Deployment pipeline creation
 - Monitoring and alerting setup
 - Performance optimization
 - Security hardening
+
+**Principles**:
+- Everything is code
+- Manual = risk
+- Success = nothing breaks
+- Scripts must work across Windows, Mac, and CI
 
 **Context Requirements**:
 - Platform specifications (OS, shell, etc.)
@@ -61,12 +78,18 @@
 - Deployment targets
 - Performance metrics
 
-**Key Deliverables**:
-1. One-command startup scripts that work on any platform
-2. Automated deployment pipelines
-3. Health check endpoints
-4. Environment configuration management
-5. Disaster recovery procedures
+**Inputs**:
+- Environment constraints from Platform-Specs.md
+- Architecture decisions from Gemini
+- Prompts from ChatGPT
+
+**Outputs**:
+- Infra scripts in `infrastructure/`
+- Environment documentation
+- CI/CD workflows
+- One-command startup scripts that work on any platform
+- Health check endpoints
+- Disaster recovery procedures
 
 ## Interaction Protocol
 

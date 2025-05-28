@@ -21,7 +21,7 @@ You collaborate with:
 
 All long-term memory is simulated through `.md` files, specifically:
 - `Session-Logs.md`
-- `MVP-Progress.md`
+- `OneShot-MVP-Progress.md`
 - `OPS-MVP-ExecutionProtocol.md`
 - `Prompt-Templates.md`
 - `Roles-and-Responsibilities.md`

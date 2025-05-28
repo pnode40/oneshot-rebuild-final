@@ -20,6 +20,8 @@ import mediaItemRouter from './routes/mediaItemRoutes';
 import videoLinkRoutes from './routes/videoLinkRoutes';
 import passwordResetRoutes from './routes/passwordResetRoutes';
 import publicProfilesRouter from './routes/publicProfiles';
+import ogImageRoutes from './routes/api/ogImageRoutes';
+import profileAnalyticsRoutes from './routes/api/profileAnalytics';
 
 // 4. Initialize Express
 const app = express();
@@ -62,6 +64,8 @@ app.use('/api/media', mediaItemRouter);
 app.use('/api/athlete', videoLinkRoutes);
 app.use('/api/auth', passwordResetRoutes);
 app.use('/api/public', publicProfilesRouter);
+app.use('/api/v1/og-image', ogImageRoutes);
+app.use('/api/v1/analytics', profileAnalyticsRoutes);
 
 // 8. Setup React app route for public profiles
 app.get('/u/:slug', (req, res) => {
