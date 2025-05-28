@@ -40,7 +40,10 @@ const corsOptions = {
     'http://localhost:5175', 
     'http://localhost:5176', 
     'http://localhost:5177', 
-    'http://localhost:5178'
+    'http://localhost:5178',
+    'https://oneshot-rebuild-final.vercel.app',
+    'https://oneshot-rebuild-final-git-main-pnode40.vercel.app',
+    'https://oneshot-rebuild-final-pnode40.vercel.app'
   ],
   optionsSuccessStatus: 200,
   credentials: true
