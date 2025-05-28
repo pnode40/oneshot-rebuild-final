@@ -7,7 +7,7 @@ import ProfilePreview from './components/ProfilePreview';
 import PublicProfilePage from './pages/PublicProfilePage';
 import PublicProfileEnhanced from './components/PublicProfileEnhanced';
 import EnhancedProfileTestPage from './pages/EnhancedProfileTestPage';
-import Login from './components/Login';
+import SimpleLogin from './components/SimpleLogin';
 import Register from './components/Register';
 import Layout from './components/Layout';
 import { AnalyticsDashboard } from './components/admin';
@@ -119,7 +119,7 @@ const AppAuthContainer: React.FC = () => {
       testBanner.style.borderTopLeftRadius = '6px';
       testBanner.style.fontSize = '12px';
       testBanner.style.zIndex = '9999';
-      testBanner.textContent = '�� Test Mode';
+      testBanner.textContent = '🧪 Test Mode';
       
       document.body.appendChild(testBanner);
       
@@ -224,7 +224,7 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
           path="/login" 
           element={
             <PublicRoute>
-              <Login onSuccess={handleAuthSuccess} />
+              <SimpleLogin onSuccess={handleAuthSuccess} />
             </PublicRoute>
           } 
         />
@@ -379,6 +379,14 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
             <ProtectedRoute>
               <CreateAthleteProfile />
             </ProtectedRoute>
+          } 
+        />
+        
+        {/* Access test HTML file directly */}
+        <Route 
+          path="/test-mobile" 
+          element={
+            <Navigate to="/test.html" />
           } 
         />
         
