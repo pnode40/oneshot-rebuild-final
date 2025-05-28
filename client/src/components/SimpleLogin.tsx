@@ -36,7 +36,7 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ onSuccess }) => {
     }
   };
 
-  // True single-screen login with absolutely no scrolling needed
+  // Full-screen login that extends to the edges of the screen
   return (
     <div style={{
       backgroundColor: "#0a1128",
@@ -50,7 +50,11 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ onSuccess }) => {
       justifyContent: "center",
       padding: 0,
       margin: 0,
-      height: "100%"
+      zIndex: 1000, // Ensure it's above any other elements
+      width: "100vw", // Full viewport width
+      height: "100vh", // Full viewport height
+      maxWidth: "none", // Override any max-width from parent
+      boxSizing: "border-box" // Ensure padding doesn't add to width
     }}>
       <div style={{
         width: "85%",

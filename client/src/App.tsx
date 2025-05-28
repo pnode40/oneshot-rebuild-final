@@ -218,182 +218,191 @@ const AppContent: React.FC<{ testMode: boolean }> = ({ testMode }) => {
   };
 
   return (
-    <Layout>
-      <Routes>
-        <Route 
-          path="/login" 
-          element={
-            <PublicRoute>
-              <SimpleLogin onSuccess={handleAuthSuccess} />
-            </PublicRoute>
-          } 
-        />
-        
-        <Route 
-          path="/register" 
-          element={
-            <PublicRoute>
-              <Register onSuccess={handleAuthSuccess} />
-            </PublicRoute>
-          } 
-        />
-        
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          } 
-        />
+    <Routes>
+      {/* Auth routes - outside of Layout */}
+      <Route 
+        path="/login" 
+        element={
+          <PublicRoute>
+            <SimpleLogin onSuccess={handleAuthSuccess} />
+          </PublicRoute>
+        } 
+      />
+      
+      <Route 
+        path="/register" 
+        element={
+          <PublicRoute>
+            <Register onSuccess={handleAuthSuccess} />
+          </PublicRoute>
+        } 
+      />
+      
+      {/* All other routes - inside Layout */}
+      <Route
+        path="/*"
+        element={
+          <Layout>
+            <Routes>
+              <Route 
+                path="/" 
+                element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                } 
+              />
 
-        {/* Old profile form route - kept for legacy access */}
-        <Route 
-          path="/legacy-profile-form" 
-          element={
-            <ProtectedRoute>
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="md:w-1/2">
-                  <ProfileInfoForm
-                    profileData={profileData}
-                    onChange={handleProfileChange}
-                  />
-                </div>
-                <div className="md:w-1/2">
-                  <ProfilePreview profileData={profileData} />
-                </div>
-              </div>
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Redirect /home to / */}
-        <Route path="/home" element={<Navigate to="/" replace />} />
-        
-        {/* Enhanced Public Profile Route */}
-        <Route path="/profile/:slug" element={<PublicProfileEnhanced />} />
-        
-        {/* Legacy Public Profile Route */}
-        <Route path="/profile-legacy/:slug" element={<PublicProfilePage />} />
-        
-        {/* Enhanced Profile Test Page - Priority #1 Features */}
-        <Route path="/enhanced-profile-test" element={<EnhancedProfileTestPage />} />
-        
-        {/* Enhanced Profile Management Dashboard */}
-        <Route 
-          path="/profile-management/:athleteProfileId" 
-          element={
-            <ProtectedRoute>
-              <EnhancedProfileDashboardWrapper />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Profile Analytics Dashboard */}
-        <Route 
-          path="/profile-analytics/:slug" 
-          element={
-            <ProtectedRoute>
-              <ProfileAnalyticsDashboardWrapper />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Analytics Dashboard */}
-        <Route 
-          path="/analytics" 
-          element={
-            <ProtectedRoute>
-              <AnalyticsDashboard userRole="athlete" />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Security Dashboard */}
-        <Route 
-          path="/security" 
-          element={
-            <ProtectedRoute>
-              <SecurityDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Admin Analytics Dashboard */}
-        <Route 
-          path="/admin/analytics" 
-          element={
-            <ProtectedRoute>
-              <AnalyticsDashboard userRole="admin" />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Original test component route */}
-        <Route 
-          path="/test-profile" 
-          element={
-            <TestAuthProvider>
-              <div className="max-w-4xl mx-auto p-6">
-                <h1 className="text-2xl font-bold mb-6">Profile Form Test Page</h1>
-                <p className="mb-4 text-gray-600">This page lets you test the ProfileInfoForm component directly, with mock authentication.</p>
-                
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="md:w-1/2">
-                    <ProfileInfoForm
-                      profileData={{
-                        fullName: 'Test User',
-                        email: 'test@example.com',
-                        highSchool: 'Central High',
-                        position: 'Quarterback',
-                        gradYear: '2025',
-                        cityState: 'Austin, TX',
-                        heightFt: '6',
-                        heightIn: '2',
-                        weight: '185',
-                        fortyYardDash: '4.6',
-                        benchPress: '225'
-                      }}
-                      onChange={(changes) => console.log('Form changes:', changes)}
-                    />
-                  </div>
-                  <div className="md:w-1/2 bg-gray-50 p-4 rounded-lg">
-                    <h2 className="text-lg font-semibold mb-2">Developer Notes</h2>
-                    <ul className="list-disc pl-5 space-y-2 text-sm">
-                      <li>Changes to the form will be logged to the console (F12)</li>
-                      <li>This route uses a <code className="bg-gray-100 px-1 rounded">TestAuthProvider</code> for mock authentication</li>
-                      <li>Bookmark <code className="bg-gray-100 px-1 rounded">http://localhost:5173/test-profile</code> for quick access</li>
-                      <li>Edit this component in <code className="bg-gray-100 px-1 rounded">src/components/ProfileInfoForm.tsx</code></li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </TestAuthProvider>
-          } 
-        />
-        
-        {/* Create Athlete Profile */}
-        <Route 
-          path="/create-profile" 
-          element={
-            <ProtectedRoute>
-              <CreateAthleteProfile />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Access test HTML file directly */}
-        <Route 
-          path="/test-mobile" 
-          element={
-            <Navigate to="/test.html" />
-          } 
-        />
-        
-        {/* Catch all route for 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Layout>
+              {/* Old profile form route - kept for legacy access */}
+              <Route 
+                path="/legacy-profile-form" 
+                element={
+                  <ProtectedRoute>
+                    <div className="flex flex-col md:flex-row gap-6">
+                      <div className="md:w-1/2">
+                        <ProfileInfoForm
+                          profileData={profileData}
+                          onChange={handleProfileChange}
+                        />
+                      </div>
+                      <div className="md:w-1/2">
+                        <ProfilePreview profileData={profileData} />
+                      </div>
+                    </div>
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Redirect /home to / */}
+              <Route path="/home" element={<Navigate to="/" replace />} />
+              
+              {/* Enhanced Public Profile Route */}
+              <Route path="/profile/:slug" element={<PublicProfileEnhanced />} />
+              
+              {/* Legacy Public Profile Route */}
+              <Route path="/profile-legacy/:slug" element={<PublicProfilePage />} />
+              
+              {/* Enhanced Profile Test Page - Priority #1 Features */}
+              <Route path="/enhanced-profile-test" element={<EnhancedProfileTestPage />} />
+              
+              {/* Enhanced Profile Management Dashboard */}
+              <Route 
+                path="/profile-management/:athleteProfileId" 
+                element={
+                  <ProtectedRoute>
+                    <EnhancedProfileDashboardWrapper />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Profile Analytics Dashboard */}
+              <Route 
+                path="/profile-analytics/:slug" 
+                element={
+                  <ProtectedRoute>
+                    <ProfileAnalyticsDashboardWrapper />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Analytics Dashboard */}
+              <Route 
+                path="/analytics" 
+                element={
+                  <ProtectedRoute>
+                    <AnalyticsDashboard userRole="athlete" />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Security Dashboard */}
+              <Route 
+                path="/security" 
+                element={
+                  <ProtectedRoute>
+                    <SecurityDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Admin Analytics Dashboard */}
+              <Route 
+                path="/admin/analytics" 
+                element={
+                  <ProtectedRoute>
+                    <AnalyticsDashboard userRole="admin" />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Original test component route */}
+              <Route 
+                path="/test-profile" 
+                element={
+                  <TestAuthProvider>
+                    <div className="max-w-4xl mx-auto p-6">
+                      <h1 className="text-2xl font-bold mb-6">Profile Form Test Page</h1>
+                      <p className="mb-4 text-gray-600">This page lets you test the ProfileInfoForm component directly, with mock authentication.</p>
+                      
+                      <div className="flex flex-col md:flex-row gap-6">
+                        <div className="md:w-1/2">
+                          <ProfileInfoForm
+                            profileData={{
+                              fullName: 'Test User',
+                              email: 'test@example.com',
+                              highSchool: 'Central High',
+                              position: 'Quarterback',
+                              gradYear: '2025',
+                              cityState: 'Austin, TX',
+                              heightFt: '6',
+                              heightIn: '2',
+                              weight: '185',
+                              fortyYardDash: '4.6',
+                              benchPress: '225'
+                            }}
+                            onChange={(changes) => console.log('Form changes:', changes)}
+                          />
+                        </div>
+                        <div className="md:w-1/2 bg-gray-50 p-4 rounded-lg">
+                          <h2 className="text-lg font-semibold mb-2">Developer Notes</h2>
+                          <ul className="list-disc pl-5 space-y-2 text-sm">
+                            <li>Changes to the form will be logged to the console (F12)</li>
+                            <li>This route uses a <code className="bg-gray-100 px-1 rounded">TestAuthProvider</code> for mock authentication</li>
+                            <li>Bookmark <code className="bg-gray-100 px-1 rounded">http://localhost:5173/test-profile</code> for quick access</li>
+                            <li>Edit this component in <code className="bg-gray-100 px-1 rounded">src/components/ProfileInfoForm.tsx</code></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </TestAuthProvider>
+                } 
+              />
+              
+              {/* Create Athlete Profile */}
+              <Route 
+                path="/create-profile" 
+                element={
+                  <ProtectedRoute>
+                    <CreateAthleteProfile />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Access test HTML file directly */}
+              <Route 
+                path="/test-mobile" 
+                element={
+                  <Navigate to="/test.html" />
+                } 
+              />
+              
+              {/* Catch all route for 404 */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Layout>
+        }
+      />
+    </Routes>
   );
 };
 
