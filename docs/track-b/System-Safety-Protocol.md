@@ -1,1 +1,0 @@
-[Track B] System Safety Protocol – finalized

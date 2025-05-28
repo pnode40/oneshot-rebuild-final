@@ -1,1 +1,0 @@
-[Track B] Task plan for transcript endpoint
