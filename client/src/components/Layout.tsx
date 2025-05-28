@@ -11,7 +11,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   
   return (
-    <div className="bg-background text-body font-body min-h-screen max-w-screen-lg mx-auto p-4">
+    <div className="bg-background text-body font-body min-h-screen w-full mx-auto px-2 sm:px-4 md:max-w-screen-lg">
       <Header />
       <main>{children}</main>
       
