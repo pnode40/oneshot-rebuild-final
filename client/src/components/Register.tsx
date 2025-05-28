@@ -70,7 +70,7 @@ const Register: React.FC<RegisterProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1128] flex flex-col items-center justify-center px-4 py-12">
+    <div className="bg-[#0a1128] flex flex-col items-center justify-center px-4 py-8 md:py-12">
       <div className="max-w-sm mx-auto w-full p-6 bg-white rounded-2xl shadow-xl">
         <h2 className="text-2xl font-bold mb-6 text-center uppercase tracking-tight text-[#0a1128]">Create Account</h2>
         
