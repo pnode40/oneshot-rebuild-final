@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OneShot - Reset</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    .container { max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+    button { background: #00c2ff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OneShot - Reset Application</h1>
+    <p>This tool will reset the application state and redirect you to the main site.</p>
+    <div id="status"></div>
+    <button id="reset-button">Reset & Reload App</button>
+  </div>
+
+  <script>
+    document.getElementById('reset-button').addEventListener('click', function() {
+      const status = document.getElementById('status');
+      
+      try {
+        // Clear all localStorage
+        localStorage.clear();
+        
+        // Add success message
+        status.innerHTML = '<p class="success">Application reset successful!</p>';
+        status.innerHTML += '<p>Redirecting to main site in 2 seconds...</p>';
+        
+        // Redirect after a short delay
+        setTimeout(function() {
+          window.location.href = '/';
+        }, 2000);
+      } catch (error) {
+        status.innerHTML = '<p style="color:red">Error: ' + error.message + '</p>';
+      }
+    });
+  </script>
+</body>
+</html> 
