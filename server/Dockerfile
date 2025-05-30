@@ -17,7 +17,7 @@ COPY package*.json ./
 FROM base AS development
 
 # Install all dependencies (including dev dependencies)
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -39,7 +39,7 @@ CMD ["npm", "run", "dev"]
 FROM base AS build
 
 # Install all dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -67,7 +67,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Copy built application from build stage
 COPY --from=build --chown=oneshot:nodejs /app/dist ./dist
