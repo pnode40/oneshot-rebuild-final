@@ -21,5 +21,12 @@ export default defineConfig({
   preview: {
     port: 5173,
     host: 'localhost',
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: './index.html'
+      }
+    }
   }
 })

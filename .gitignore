@@ -73,3 +73,6 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+
+# Ignore OneShotLocal directory (outdated duplicate)
+OneShotLocal/
