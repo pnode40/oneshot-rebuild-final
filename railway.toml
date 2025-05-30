@@ -1,0 +1,6 @@
+[build]
+workingDirectory = "server"
+
+[deploy]
+workingDirectory = "server"
+startCommand = "npm start" 
