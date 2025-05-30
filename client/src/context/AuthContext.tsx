@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Register function
+  // Register function with improved error handling
   const register = async (userData: {
     email: string;
     password: string;
@@ -69,30 +69,45 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role: userData.role
       });
       
-      const { data } = await apiRegister(userData);
-      console.log("AuthContext: Registration API response:", data);
+      // Capture registration start time for debugging
+      const startTime = Date.now();
       
-      if (data.success && data.token && data.user) {
-        console.log("AuthContext: Registration successful, token received:", {
-          token: data.token.substring(0, 15) + '...',
-          userId: data.user.id,
-          role: data.user.role
+      try {
+        const { response, data } = await apiRegister(userData);
+        const endTime = Date.now();
+        
+        console.log("AuthContext: Registration API completed in " + (endTime - startTime) + "ms");
+        console.log("AuthContext: Registration response status:", response.status);
+        
+        if (response.ok && data.success && data.token && data.user) {
+          console.log("AuthContext: Registration successful, token received:", {
+            token: data.token.substring(0, 15) + '...',
+            userId: data.user.id,
+            role: data.user.role
+          });
+          
+          setAuthState({
+            isAuthenticated: true,
+            user: data.user,
+          });
+          console.log("AuthContext: Auth state updated, returning success");
+          return true;
+        }
+        
+        // Log error details
+        console.error("AuthContext: Registration failed", {
+          status: response.status,
+          statusText: response.statusText,
+          success: data.success,
+          message: data.message,
+          errors: data.errors
         });
         
-        setAuthState({
-          isAuthenticated: true,
-          user: data.user,
-        });
-        console.log("AuthContext: Auth state updated, returning success");
-        return true;
+        return false;
+      } catch (apiError: any) {
+        console.error("AuthContext: API registration error:", apiError);
+        return false;
       }
-      
-      console.log("AuthContext: Registration failed, missing data:", { 
-        success: data.success,
-        hasToken: !!data.token,
-        hasUser: !!data.user
-      });
-      return false;
     } catch (error) {
       console.error("AuthContext: Registration error:", error);
       return false;

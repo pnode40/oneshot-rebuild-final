@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OneShot - Fix Test Mode</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; line-height: 1.6; }
+    button { padding: 10px 15px; background: #00c2ff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #ff6b35; }
+    .success { color: #4CAF50; }
+    .error { color: #FF5252; }
+  </style>
+</head>
+<body>
+  <h1>OneShot - Fix Test Mode</h1>
+  <p>This tool helps fix issues with Test Mode activation in the OneShot app.</p>
+  
+  <h2>Current Status</h2>
+  <div id="status">Checking...</div>
+  
+  <h2>Actions</h2>
+  <button id="disable-test-mode">Disable Test Mode</button>
+  <button id="check-api-url">Check API URL Setting</button>
+  <button id="clear-all-storage">Clear All Storage (CAREFUL!)</button>
+  
+  <h2>Results</h2>
+  <pre id="results"></pre>
+  
+  <script>
+    // Check current test mode status
+    const checkStatus = () => {
+      const testModeEnabled = localStorage.getItem('oneshot_test_mode') === 'true';
+      const apiUrl = localStorage.getItem('api_url') || 'Not set in localStorage';
+      
+      document.getElementById('status').innerHTML = `
+        <p><strong>Test Mode:</strong> ${testModeEnabled ? '✅ ENABLED' : '❌ DISABLED'}</p>
+        <p><strong>API URL in localStorage:</strong> ${apiUrl}</p>
+      `;
+      
+      return { testModeEnabled, apiUrl };
+    };
+    
+    // Disable test mode
+    document.getElementById('disable-test-mode').addEventListener('click', () => {
+      try {
+        localStorage.removeItem('oneshot_test_mode');
+        localStorage.removeItem('oneShot_testMode_profileData');
+        
+        const status = checkStatus();
+        document.getElementById('results').textContent = 
+          `Success! Test mode disabled. Please refresh the app now.
+Current settings: ${JSON.stringify(status, null, 2)}`;
+        
+        document.getElementById('results').className = 'success';
+      } catch (err) {
+        document.getElementById('results').textContent = `Error: ${err.message}`;
+        document.getElementById('results').className = 'error';
+      }
+    });
+    
+    // Check API URL
+    document.getElementById('check-api-url').addEventListener('click', () => {
+      try {
+        // This only works if the app is running on the same domain
+        // It's meant to check environment variables in the running app
+        fetch('/api-url-check')
+          .then(res => res.json())
+          .catch(() => {
+            // If API check endpoint doesn't exist, use this client-side check
+            const envApiUrl = import.meta.env?.VITE_API_URL || 'Not available client-side';
+            return { apiUrl: envApiUrl };
+          })
+          .then(data => {
+            document.getElementById('results').textContent = 
+              `API URL information:
+Environment variable: ${data.apiUrl || 'Not available'}
+Local Storage: ${localStorage.getItem('api_url') || 'Not set'}`;
+          });
+      } catch (err) {
+        document.getElementById('results').textContent = 
+          `Could not check API URL: ${err.message}
+Try checking the console directly in the app using:
+console.log(import.meta.env.VITE_API_URL)`;
+      }
+    });
+    
+    // Clear all storage
+    document.getElementById('clear-all-storage').addEventListener('click', () => {
+      if (confirm('WARNING: This will clear ALL localStorage data. Continue?')) {
+        try {
+          localStorage.clear();
+          document.getElementById('results').textContent = 'All localStorage cleared!';
+          document.getElementById('results').className = 'success';
+          checkStatus();
+        } catch (err) {
+          document.getElementById('results').textContent = `Error: ${err.message}`;
+          document.getElementById('results').className = 'error';
+        }
+      } else {
+        document.getElementById('results').textContent = 'Operation cancelled.';
+      }
+    });
+    
+    // Initialize
+    checkStatus();
+  </script>
+</body>
+</html> 

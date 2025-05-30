@@ -4,7 +4,7 @@
 
 // Configure the base URL for all API requests
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-console.log('API_BASE_URL:', API_BASE_URL); // Debugging log
+console.log('API_BASE_URL (updated):', API_BASE_URL); // Updated log to force rebuild
 
 // Key for localStorage profile data in test mode
 const TEST_MODE_PROFILE_DATA_KEY = 'oneShot_testMode_profileData';
@@ -114,22 +114,34 @@ export async function register(userData: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(userData),
+      mode: 'cors',
+      credentials: 'include',
     });
     
     console.log('API service: Registration response status:', response.status);
-    const data = await response.json();
-    console.log('API service: Registration response parsed:', {
-      success: data.success,
-      hasToken: !!data.token,
-      hasUser: !!data.user
-    });
+    console.log('API service: Registration response headers:', Object.fromEntries([...response.headers.entries()]));
     
-    if (data.success && data.token) {
-      console.log('API service: Registration successful, storing token');
-      storeToken(data.token);
+    try {
+      const data = await response.json();
+      console.log('API service: Registration response parsed:', {
+        success: data.success,
+        hasToken: !!data.token,
+        hasUser: !!data.user,
+        message: data.message,
+        errors: data.errors
+      });
+      
+      if (data.success && data.token) {
+        console.log('API service: Registration successful, storing token');
+        storeToken(data.token);
+      }
+      
+      return { response, data };
+    } catch (parseError: any) {
+      console.error('API service: Error parsing response JSON:', parseError);
+      console.log('API service: Response text:', await response.text());
+      throw new Error(`Failed to parse response: ${parseError.message}`);
     }
-    
-    return { response, data };
   } catch (error) {
     console.error('API service: Registration error:', error);
     throw error;
