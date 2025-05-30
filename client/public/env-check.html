@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Check - OneShot Recruits</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .error { background: #fee; border: 1px solid #fcc; color: #c33; }
+        .success { background: #efe; border: 1px solid #cfc; color: #363; }
+        .info { background: #eef; border: 1px solid #ccf; color: #336; }
+        button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #005a87; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 OneShot Environment Check</h1>
+        
+        <div class="status info">
+            <strong>Expected API URL:</strong> https://oneshot-backend-production.up.railway.app
+        </div>
+        
+        <div id="results">
+            <p>Click the test button to check your environment configuration...</p>
+        </div>
+        
+        <button onclick="checkEnvironment()">🧪 Test Environment</button>
+        <button onclick="testDirectAPI()">🎯 Test Railway API Direct</button>
+        <button onclick="testFrontendAPI()">🌐 Test Frontend API</button>
+    </div>
+
+    <script>
+        const EXPECTED_API = 'https://oneshot-backend-production.up.railway.app';
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function checkEnvironment() {
+            clearResults();
+            addResult('🔍 Checking environment configuration...', 'info');
+            
+            // Check what the frontend thinks the API URL is
+            const currentAPI = window.location.origin.includes('localhost') 
+                ? 'http://localhost:3001' 
+                : (import.meta?.env?.VITE_API_URL || 'http://localhost:3001');
+            
+            addResult(`<strong>Current API URL:</strong> ${currentAPI}`, 
+                currentAPI === EXPECTED_API ? 'success' : 'error');
+            
+            if (currentAPI !== EXPECTED_API) {
+                addResult(`❌ <strong>PROBLEM FOUND!</strong> Your frontend is pointing to <code>${currentAPI}</code> instead of <code>${EXPECTED_API}</code>`, 'error');
+                addResult(`✅ <strong>SOLUTION:</strong> Set VITE_API_URL environment variable in Vercel to: <code>${EXPECTED_API}</code>`, 'info');
+            } else {
+                addResult('✅ API URL configuration looks correct!', 'success');
+            }
+        }
+        
+        async function testDirectAPI() {
+            clearResults();
+            addResult('🎯 Testing Railway API directly...', 'info');
+            
+            try {
+                const response = await fetch(`${EXPECTED_API}/api/health`);
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'healthy') {
+                    addResult('✅ Railway API is working perfectly!', 'success');
+                    addResult(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                } else {
+                    addResult('⚠️ Railway API responded but with issues', 'error');
+                    addResult(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Railway API test failed: ${error.message}`, 'error');
+                addResult('This might be a CORS issue if you\'re testing from production domain', 'info');
+            }
+        }
+        
+        async function testFrontendAPI() {
+            clearResults();
+            addResult('🌐 Testing through frontend API configuration...', 'info');
+            
+            try {
+                // This simulates what your React app would do
+                const API_BASE = window.location.origin.includes('localhost') 
+                    ? 'http://localhost:3001' 
+                    : (import.meta?.env?.VITE_API_URL || 'http://localhost:3001');
+                
+                addResult(`Attempting to connect to: ${API_BASE}`, 'info');
+                
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'healthy') {
+                    addResult('✅ Frontend API connection working!', 'success');
+                    addResult(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+                } else {
+                    addResult('⚠️ Frontend API connection has issues', 'error');
+                    addResult(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Frontend API test failed: ${error.message}`, 'error');
+                addResult('This confirms the environment variable issue!', 'error');
+            }
+        }
+    </script>
+</body>
+</html> 
