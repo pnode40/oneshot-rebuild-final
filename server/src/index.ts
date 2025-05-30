@@ -45,7 +45,10 @@ const corsOptions = {
     'http://localhost:5178',
     'https://oneshot-rebuild-final.vercel.app',
     'https://oneshot-rebuild-final-git-main-pnode40.vercel.app',
-    'https://oneshot-rebuild-final-pnode40.vercel.app'
+    'https://oneshot-rebuild-final-pnode40.vercel.app',
+    'https://www.oneshotrecruits.com',
+    'https://oneshotrecruits.com',
+    ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
   ],
   optionsSuccessStatus: 200,
   credentials: true
