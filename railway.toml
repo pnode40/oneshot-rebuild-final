@@ -1,5 +1,6 @@
 [build]
 workingDirectory = "server"
+command = "npm install && npm run build"
 
 [deploy]
 workingDirectory = "server"
