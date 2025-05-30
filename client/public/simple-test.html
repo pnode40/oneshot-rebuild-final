@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Fix - OneShot Recruits</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .box { padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .error { background: #fee; border: 1px solid #fcc; color: #c33; }
+        .success { background: #efe; border: 1px solid #cfc; color: #363; }
+        .info { background: #eef; border: 1px solid #ccf; color: #336; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        code { background: #f5f5f5; padding: 2px 4px; border-radius: 3px; }
+        ol li { margin: 10px 0; }
+        button { background: #007cba; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🔧 OneShot Registration Fix</h1>
+    
+    <div class="error box">
+        <h3>❌ Problem Identified</h3>
+        <p>Your frontend is pointing to <code>localhost:3001</code> instead of your Railway backend.</p>
+        <p><strong>Result:</strong> Registration fails because localhost doesn't exist on Vercel's servers.</p>
+    </div>
+
+    <div class="success box">
+        <h3>✅ Solution (5 minutes)</h3>
+        <p>Add one environment variable in Vercel:</p>
+        <ol>
+            <li>Go to <strong>Vercel Dashboard</strong> → Find your project</li>
+            <li>Go to <strong>Settings</strong> → <strong>Environment Variables</strong></li>
+            <li>Click <strong>Add New</strong></li>
+            <li>Name: <code>VITE_API_URL</code></li>
+            <li>Value: <code>https://oneshot-backend-production.up.railway.app</code></li>
+            <li>Environment: Select <strong>Production</strong></li>
+            <li>Click <strong>Save</strong></li>
+            <li>Go to <strong>Deployments</strong> → Click ⋯ → <strong>Redeploy</strong></li>
+        </ol>
+    </div>
+
+    <div class="info box">
+        <h3>🎯 Why This Works</h3>
+        <p>Your Railway backend is running perfectly at:</p>
+        <p><code>https://oneshot-backend-production.up.railway.app</code></p>
+        <p>We just need to tell your React app to use this URL instead of localhost.</p>
+    </div>
+
+    <div class="warning box">
+        <h3>⏱️ After Adding the Environment Variable</h3>
+        <p>Wait 2-3 minutes for Vercel to redeploy, then test registration!</p>
+    </div>
+
+    <button onclick="testBackend()">🧪 Test Railway Backend</button>
+    <div id="test-result"></div>
+
+    <script>
+        async function testBackend() {
+            const result = document.getElementById('test-result');
+            result.innerHTML = '<p>Testing Railway backend...</p>';
+            
+            try {
+                const response = await fetch('https://oneshot-backend-production.up.railway.app/api/health');
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    result.innerHTML = `
+                        <div class="success box">
+                            <h4>✅ Railway Backend is Working!</h4>
+                            <p>Status: ${data.status}</p>
+                            <p>Database: ${data.services.database}</p>
+                            <p>Server: ${data.services.server}</p>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = '<div class="error box">Backend responded but with issues</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="info box">
+                        <h4>ℹ️ CORS Error (Expected)</h4>
+                        <p>This is normal - your backend is running but blocks cross-origin requests from this domain.</p>
+                        <p>Once you fix the frontend environment variable, everything will work!</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
