@@ -10,14 +10,17 @@ WORKDIR /app
 # Copy package files first (for better caching)
 COPY package*.json ./
 
-# Install dependencies with memory optimization
-RUN npm ci --only=production --no-audit --no-fund
+# Install ALL dependencies (including dev dependencies for build)
+RUN npm ci --no-audit --no-fund
 
 # Copy source code
 COPY . .
 
 # Build the application
 RUN npm run build
+
+# Remove dev dependencies to save space
+RUN npm ci --only=production --no-audit --no-fund && npm cache clean --force
 
 # Create uploads directory
 RUN mkdir -p uploads/profile-photos uploads/transcripts uploads/og-images
