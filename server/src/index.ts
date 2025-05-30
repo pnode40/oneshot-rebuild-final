@@ -5,6 +5,7 @@ import path from 'path';
 // Load environment variables from the server directory
 dotenv.config();
 
+// CORS fix deployed - force redeploy timestamp: 2025-05-30T04:35:00Z
 // Debug: Check if DATABASE_URL is loaded
 console.log('🔍 DATABASE_URL loaded:', process.env.DATABASE_URL ? 'YES' : 'NO');
 console.log('🔍 DATABASE_URL value:', process.env.DATABASE_URL?.substring(0, 50) + '...');
